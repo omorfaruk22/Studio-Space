@@ -10,7 +10,7 @@ npm install
 npm run dev
 ```
 
-Set `MONGODB_URI` in `.env` to a MongoDB Atlas connection string. `CLIENT_ORIGIN` controls the allowed browser origin. The server listens on port 4000 by default.
+Set `MONGODB_URI` in `.env` to a MongoDB Atlas connection string. `.env.local` is also accepted and takes precedence when present. `CLIENT_ORIGIN` controls the allowed browser origin. The server listens on port 4000 by default.
 
 ## Health check
 

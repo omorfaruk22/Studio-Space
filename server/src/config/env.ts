@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
+import { existsSync } from "node:fs";
 
-dotenv.config();
+dotenv.config({ path: existsSync(".env.local") ? ".env.local" : ".env" });
 
 const port = Number(process.env.PORT ?? 4000);
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
