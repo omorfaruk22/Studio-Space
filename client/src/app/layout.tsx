@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Toaster } from "sonner";
 import { SiteFooter } from "@/components/site-footer";
 import { SessionAwareHeader } from "@/components/auth/session-aware-header";
@@ -13,7 +14,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans">
-        <SessionAwareHeader />
+        <Suspense fallback={<div aria-hidden="true" className="sticky top-0 z-50 h-[76px] border-b border-line/80 bg-canvas/95" />}>
+          <SessionAwareHeader />
+        </Suspense>
         {children}
         <SiteFooter />
         <Toaster position="top-right" richColors />

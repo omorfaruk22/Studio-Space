@@ -21,4 +21,8 @@ Email/password authentication is configured in the server. To enable Google logi
 - `npm run build` — create an optimized production build.
 - `npm start` — serve the production build.
 
-The current page confirms the Phase 1 frontend scaffold. Marketplace UI will be added in later phases.
+## Studio discovery
+
+The home page includes a three-slide hero, featured studios loaded from the API, category links, booking guidance, and host support information. The `/studios` page supports title search, category, location, hourly price range, and sorting filters. Each studio links to `/studios/[id]` for its gallery, overview, amenities, host details, and review summary.
+
+Public studio data is fetched from the Express API at `NEXT_PUBLIC_API_URL`. When there are no studio records, the home page and discovery page show friendly empty states. Online reservations are implemented in a later project phase.
