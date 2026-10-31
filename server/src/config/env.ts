@@ -13,4 +13,8 @@ export const env = {
   port,
   clientOrigin: process.env.CLIENT_ORIGIN ?? "http://localhost:3000",
   mongoUri: process.env.MONGODB_URI,
+  betterAuthSecret: process.env.BETTER_AUTH_SECRET,
+  betterAuthUrl: process.env.BETTER_AUTH_URL ?? `http://localhost:${port}`,
+  googleClientId: process.env.GOOGLE_CLIENT_ID,
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
 };

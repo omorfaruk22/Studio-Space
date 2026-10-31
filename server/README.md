@@ -1,6 +1,6 @@
 # StudioSpace API
 
-Express and TypeScript REST API for StudioSpace.
+Express and TypeScript REST API for StudioSpace, including Better Auth and MongoDB-backed sessions.
 
 ## Setup
 
@@ -11,6 +11,10 @@ npm run dev
 ```
 
 Set `MONGODB_URI` in `.env` to a MongoDB Atlas connection string. `.env.local` is also accepted and takes precedence when present. `CLIENT_ORIGIN` controls the allowed browser origin. The server listens on port 4000 by default.
+
+Set a private `BETTER_AUTH_SECRET` of at least 32 characters and `BETTER_AUTH_URL=http://localhost:3000` (the frontend origin). The frontend proxies `/api/auth/*` to Express so HTTPOnly cookies stay on the frontend origin. Google login requires a Google OAuth Web Client ID and secret. In Google Cloud Console, add `<BETTER_AUTH_URL>/api/auth/callback/google` as an authorized redirect URI, then set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+
+`GET /api/account` is a protected API example and requires a valid session. `GET /api/session` returns the current session or `null` for the browser client.
 
 ## Health check
 

@@ -2,6 +2,7 @@
   "name": "studiospace-server",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "StudioSpace REST API",
   "main": "dist/index.js",
   "scripts": {
@@ -11,10 +12,13 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@better-auth/mongo-adapter": "^1.7.14",
+    "better-auth": "^1.7.14",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
+    "mongodb": "^7.8.0",
     "mongoose": "^8.9.5"
   },
   "devDependencies": {

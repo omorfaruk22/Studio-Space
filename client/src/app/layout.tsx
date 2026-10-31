@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { Toaster } from "sonner";
 import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { SessionAwareHeader } from "@/components/auth/session-aware-header";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,9 +13,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans">
-        <SiteHeader />
+        <SessionAwareHeader />
         {children}
         <SiteFooter />
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

@@ -10,7 +10,9 @@ npm install
 npm run dev
 ```
 
-The frontend runs at `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` in `.env.local` to the Express API origin (default: `http://localhost:4000`).
+The frontend runs at `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` in `.env.local` to the Express API origin (default: `http://localhost:4000`). Browser authentication requests use the same-origin `/api/auth/*` route, which proxies to Express so HTTPOnly cookies remain available to protected Next.js pages.
+
+Email/password authentication is configured in the server. To enable Google login, configure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `server/.env.local` and set `BETTER_AUTH_URL` to the frontend origin. The Google redirect URI is `${BETTER_AUTH_URL}/api/auth/callback/google`.
 
 ## Scripts
 
