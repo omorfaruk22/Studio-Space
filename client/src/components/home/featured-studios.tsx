@@ -1,0 +1,97 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { Aperture, ArrowRight, MapPin, RefreshCw, Star } from "lucide-react";
+import type { FeaturedStudio } from "@/lib/studio-types";
+import { studioCategoryLabels } from "@/lib/studio-types";
+
+type FeaturedResponse = { studios: FeaturedStudio[] };
+
+const apiUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
+
+async function fetchFeaturedStudios(signal?: AbortSignal): Promise<FeaturedStudio[]> {
+  const response = await fetch(`${apiUrl}/api/studios/featured`, { signal, cache: "no-store" });
+  if (!response.ok) throw new Error("Could not load featured studios.");
+  const result = (await response.json()) as FeaturedResponse;
+  return Array.isArray(result.studios) ? result.studios.slice(0, 6) : [];
+}
+
+function StudioCard({ studio }: { studio: FeaturedStudio }) {
+  return (
+    <article className="group overflow-hidden rounded-3xl border border-line bg-white shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-dialog">
+      <Link href={`/studios/${studio.id}`} className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+        <div className="relative aspect-[1.36] overflow-hidden bg-sage">
+          {studio.image ? (
+            <Image src={studio.image} alt={studio.title} fill sizes="(max-width: 640px) 92vw, (max-width: 1024px) 45vw, 30vw" unoptimized className="object-cover transition duration-500 group-hover:scale-[1.04]" />
+          ) : (
+            <div className="absolute inset-0 grid place-items-center bg-[linear-gradient(135deg,#dce8d8,#eeeae0)] text-forest"><Aperture size={58} strokeWidth={1} aria-hidden="true" /></div>
+          )}
+          <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-semibold text-ink shadow-card">{studioCategoryLabels[studio.category] ?? "Creative space"}</span>
+          <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1.5 text-xs font-semibold text-ink shadow-card">{studio.rating > 0 ? <><Star size={13} className="fill-[#d89d49] text-[#d89d49]" aria-hidden="true" />{studio.rating.toFixed(1)}</> : "New"}</span>
+        </div>
+        <div className="p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="line-clamp-1 font-serif text-xl tracking-tight text-ink sm:text-[1.35rem]">{studio.title}</h3>
+            <span className="shrink-0 text-sm font-bold text-ink">${studio.hourlyRate}<span className="font-normal text-muted"> / hr</span></span>
+          </div>
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-muted"><MapPin size={15} aria-hidden="true" /><span className="line-clamp-1">{studio.location}</span></p>
+          <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand-strong">View details <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
+        </div>
+      </Link>
+    </article>
+  );
+}
+
+function StudioSkeleton() {
+  return <div className="overflow-hidden rounded-3xl border border-line bg-white" aria-hidden="true"><div className="aspect-[1.36] animate-pulse bg-sage/70" /><div className="space-y-3 p-5"><div className="h-5 w-3/4 animate-pulse rounded bg-sand" /><div className="h-4 w-1/2 animate-pulse rounded bg-sand" /><div className="h-4 w-1/3 animate-pulse rounded bg-sand" /></div></div>;
+}
+
+export function FeaturedStudios() {
+  const [studios, setStudios] = useState<FeaturedStudio[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const loadStudios = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      setStudios(await fetchFeaturedStudios());
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadInitialStudios() {
+      try {
+        setStudios(await fetchFeaturedStudios(controller.signal));
+        setError(false);
+      } catch {
+        if (!controller.signal.aborted) setError(true);
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+    void loadInitialStudios();
+    return () => controller.abort();
+  }, []);
+
+  if (loading) {
+    return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading featured studios">{Array.from({ length: 6 }, (_, index) => <StudioSkeleton key={index} />)}</div>;
+  }
+
+  if (error) {
+    return <div className="rounded-3xl border border-line bg-white px-6 py-10 text-center" role="status"><p className="font-serif text-xl text-ink">We couldn’t load the studios just now.</p><p className="mt-2 text-sm text-muted">Check your connection and try again.</p><button type="button" onClick={() => void loadStudios()} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-full bg-forest px-5 text-sm font-semibold text-white transition hover:bg-forest-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"><RefreshCw size={15} aria-hidden="true" />Try again</button></div>;
+  }
+
+  if (studios.length === 0) {
+    return <div className="rounded-3xl border border-dashed border-line bg-white/70 px-6 py-10 text-center"><span className="mx-auto grid size-12 place-items-center rounded-2xl bg-sage text-forest"><Aperture size={23} aria-hidden="true" /></span><p className="mt-4 font-serif text-xl text-ink">The next great space belongs here.</p><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">Featured studios will appear here as hosts list their creative spaces.</p><Link href="/add-studio" className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-white transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Host your space <ArrowRight size={15} aria-hidden="true" /></Link></div>;
+  }
+
+  return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{studios.map((studio) => <StudioCard key={studio.id} studio={studio} />)}</div>;
+}
