@@ -14,6 +14,7 @@ const studioSchema = new mongoose.Schema(
     maxCapacity: { type: Number, required: true, min: 1 },
     location: { type: String, required: true, trim: true, maxlength: 180 },
     image: { type: String, required: true, trim: true },
+    images: { type: [String], default: [] },
     amenities: { type: [String], default: [] },
     overview: { type: String, required: true, trim: true, maxlength: 5000 },
     ownerId: { type: String, required: true, index: true },
@@ -29,4 +30,6 @@ studioSchema.index({ isAvailable: 1, rating: -1, createdAt: -1 });
 
 export type StudioRecord = InferSchemaType<typeof studioSchema>;
 
-export const Studio = mongoose.models.Studio ?? mongoose.model("Studio", studioSchema);
+export const Studio =
+  (mongoose.models.Studio as mongoose.Model<StudioRecord> | undefined)
+  ?? mongoose.model<StudioRecord>("Studio", studioSchema);

@@ -16,6 +16,12 @@ Set a private `BETTER_AUTH_SECRET` of at least 32 characters and `BETTER_AUTH_UR
 
 `GET /api/account` is a protected API example and requires a valid session. `GET /api/session` returns the current session or `null` for the browser client.
 
+## Studio discovery
+
+- `GET /api/studios/featured` returns up to six available studios, ordered by rating and then newest first.
+- `GET /api/studios` returns available studios. Optional query parameters are `category`, `location`, `search`, `minPrice`, `maxPrice`, and `sort` (`newest`, `price`, or `rating`).
+- `GET /api/studios/:id` returns a studio's public details. Invalid MongoDB IDs receive `400`; unavailable or missing studios receive `404`.
+
 ## Health check
 
 `GET /api/health` returns the API status, uptime, and Mongoose connection state. A missing or unavailable database is reported as `disconnected`; it does not prevent the HTTP server from starting during local setup.
