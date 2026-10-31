@@ -8,6 +8,7 @@ export type FeaturedStudio = {
   location: string;
   image: string;
   rating: number;
+  createdAt?: string;
 };
 
 export const studioCategoryLabels: Record<StudioCategory, string> = {
