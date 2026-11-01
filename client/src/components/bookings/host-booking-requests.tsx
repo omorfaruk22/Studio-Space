@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CalendarDays, Clock3, RefreshCw, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
+import { BookingGridSkeleton, Spinner } from "@/components/ui/loading";
 import { formatDuration, type BookingStatus } from "@/lib/booking-types";
 
 type Booking = {
@@ -61,6 +62,7 @@ export function HostBookingRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [busyAction, setBusyAction] = useState<"confirm" | "decline" | null>(null);
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
@@ -85,6 +87,7 @@ export function HostBookingRequests() {
 
   async function updateBooking(booking: Booking, action: "confirm" | "decline") {
     setBusyId(booking.id);
+    setBusyAction(action);
     try {
       const response = await fetch(`/api/host/bookings/${booking.id}/${action}`, {
         method: "PATCH",
@@ -99,12 +102,13 @@ export function HostBookingRequests() {
       if (action === "confirm") await loadBookings();
     } finally {
       setBusyId("");
+      setBusyAction(null);
     }
   }
 
   return (
-    <div className="mt-7 space-y-4" aria-live="polite">
-      {loading ? <div className="grid gap-4 md:grid-cols-2" aria-label="Loading booking requests">{Array.from({ length: 2 }, (_, index) => <div key={index} className="h-56 animate-pulse rounded-3xl bg-sage/60" />)}</div> : null}
+    <div className="mt-7 space-y-4" aria-live="polite" aria-busy={loading || Boolean(busyId)}>
+      {loading ? <BookingGridSkeleton label="Loading booking requests" /> : null}
       {!loading && error ? <Card><CardContent className="px-6 py-10 text-center"><p className="text-sm text-muted" role="alert">{error}</p><button type="button" onClick={() => void loadBookings()} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-strong"><RefreshCw size={15} aria-hidden="true" />Try again</button></CardContent></Card> : null}
       {!loading && !error && bookings.length === 0 ? <Card><CardContent className="px-6 py-12 text-center"><span className="mx-auto grid size-12 place-items-center rounded-2xl bg-sage text-forest"><CalendarDays size={22} aria-hidden="true" /></span><h2 className="mt-4 font-serif text-2xl text-ink">No booking requests yet</h2><p className="mt-2 text-sm text-muted">Requests for your studio listings will appear here.</p></CardContent></Card> : null}
       {!loading && !error && bookings.length > 0 ? <div className="grid gap-4 lg:grid-cols-2">{bookings.map((booking) => (
@@ -123,7 +127,7 @@ export function HostBookingRequests() {
               </div>
               <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-line pt-4">
                 <div><p className="text-xs text-muted">Rental total</p><p className="mt-1 font-semibold text-ink">{money(booking.totalPrice)}</p><p className="mt-1 text-xs text-muted">Deposit: {booking.securityDeposit ? money(booking.securityDeposit) : "None"}</p></div>
-                {booking.status === "Pending" ? <div className="flex gap-2"><button type="button" disabled={busyId === booking.id} onClick={() => void updateBooking(booking, "decline")} className="min-h-10 rounded-full border border-line px-4 text-sm font-semibold text-ink hover:bg-sand disabled:opacity-50">Decline</button><button type="button" disabled={busyId === booking.id} onClick={() => void updateBooking(booking, "confirm")} className="min-h-10 rounded-full bg-forest px-4 text-sm font-semibold text-white hover:bg-forest-strong disabled:opacity-50">{busyId === booking.id ? "Saving…" : "Confirm"}</button></div> : null}
+                {booking.status === "Pending" ? <div className="flex gap-2"><button type="button" disabled={busyId === booking.id} onClick={() => void updateBooking(booking, "decline")} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-4 text-sm font-semibold text-ink hover:bg-sand disabled:cursor-wait disabled:opacity-50">{busyId === booking.id && busyAction === "decline" ? <Spinner className="size-4" label="Declining request" /> : null}{busyId === booking.id && busyAction === "decline" ? "Declining…" : "Decline"}</button><button type="button" disabled={busyId === booking.id} onClick={() => void updateBooking(booking, "confirm")} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-forest px-4 text-sm font-semibold text-white hover:bg-forest-strong disabled:cursor-wait disabled:opacity-50">{busyId === booking.id && busyAction === "confirm" ? <Spinner className="size-4" label="Confirming request" /> : null}{busyId === booking.id && busyAction === "confirm" ? "Confirming…" : "Confirm"}</button></div> : null}
               </div>
             </CardContent>
           </div>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Filter, RefreshCw, Search, SlidersHorizontal, X } from "lucide-react";
 import { StudioCard } from "@/components/studios/studio-card";
+import { StudioGridSkeleton } from "@/components/ui/loading";
 import type { FeaturedStudio, StudioCategory } from "@/lib/studio-types";
 import { studioCategoryLabels } from "@/lib/studio-types";
 
@@ -18,10 +19,6 @@ async function fetchStudios(signal?: AbortSignal): Promise<FeaturedStudio[]> {
   const result = (await response.json()) as StudiosResponse;
   if (!Array.isArray(result.studios)) throw new Error("The studio response was not valid.");
   return result.studios;
-}
-
-function StudioGridSkeleton() {
-  return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading studios">{Array.from({ length: 6 }, (_, index) => <div key={index} aria-hidden="true" className="overflow-hidden rounded-3xl border border-line bg-white"><div className="aspect-[1.36] animate-pulse bg-sage/70" /><div className="space-y-3 p-5"><div className="h-5 w-3/4 animate-pulse rounded bg-sand" /><div className="h-4 w-1/2 animate-pulse rounded bg-sand" /><div className="h-4 w-1/3 animate-pulse rounded bg-sand" /></div></div>)}</div>;
 }
 
 export function ExploreStudios({ initialCategory }: { initialCategory: StudioCategory | "all" }) {
@@ -116,7 +113,7 @@ export function ExploreStudios({ initialCategory }: { initialCategory: StudioCat
         </div>
       </div>
 
-      <div className="mt-7" aria-live="polite">
+      <div className="mt-7" aria-live="polite" aria-busy={loading}>
         {loading ? <StudioGridSkeleton /> : null}
         {!loading && hasError ? <div className="rounded-3xl border border-line bg-white px-6 py-12 text-center" role="status"><p className="font-serif text-2xl text-ink">We couldn’t load spaces right now.</p><p className="mt-2 text-sm text-muted">Please check your connection and try again.</p><button type="button" onClick={() => void loadStudios()} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-forest px-5 text-sm font-semibold text-white transition hover:bg-forest-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"><RefreshCw size={15} aria-hidden="true" />Try again</button></div> : null}
         {!loading && !hasError && filteredStudios.length > 0 ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filteredStudios.map((studio) => <StudioCard key={studio.id} studio={studio} />)}</div> : null}

@@ -9,6 +9,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/loading";
 import { formatDuration } from "@/lib/booking-types";
 
 type BookingDialogButtonProps = {
@@ -120,7 +121,7 @@ export function BookingDialogButton({ studio, isAuthenticated }: BookingDialogBu
         <CalendarDays size={17} aria-hidden="true" /> Book workspace now
       </button>
       <Dialog open={open} title="Request a booking" description={`Choose the date and hours for ${studio.title}.`} onClose={() => setOpen(false)}>
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} aria-busy={submitting} className="space-y-5">
           {error ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{error}</p> : null}
           <FormField label="Booking date" htmlFor="bookingDate" required>
             <Input id="bookingDate" type="date" required min={today || undefined} value={bookingDate} onChange={(event) => setBookingDate(event.target.value)} />
@@ -148,7 +149,7 @@ export function BookingDialogButton({ studio, isAuthenticated }: BookingDialogBu
           </div>
 
           <Button type="submit" size="lg" className="w-full" disabled={submitting || !bookingDate || durationMinutes < 1 || !Number.isInteger(guestCount) || guestCount < 1 || guestCount > studio.maxCapacity}>
-            {submitting ? "Sending request…" : "Confirm booking request"}
+            {submitting ? <><Spinner className="size-4" label="Sending booking request" />Sending request…</> : "Confirm booking request"}
           </Button>
         </form>
       </Dialog>

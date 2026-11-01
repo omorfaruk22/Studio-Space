@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, MapPin, ShieldCheck, Star, UsersRound } from "lucide-react";
 import { BookingDialogButton } from "@/components/bookings/booking-dialog-button";
 import { StudioGallery } from "@/components/studios/studio-gallery";
@@ -99,7 +100,7 @@ export default async function StudioDetailsPage({ params }: PageProps<"/studios/
   }
 
   if (response.status === 400 || response.status === 404) {
-    return <MessagePage title="We couldn’t find that studio." description="It may have been removed or the link may be incorrect. Browse the available spaces instead." href="/studios" linkLabel="Explore studios" />;
+    notFound();
   }
   if (!response.ok) {
     return <MessagePage title="Studio details are unavailable." description="Please try again in a moment or return to the studio collection." href="/studios" linkLabel="Explore studios" />;

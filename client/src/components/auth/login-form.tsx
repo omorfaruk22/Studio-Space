@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/loading";
 import { FormDivider } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { authClient } from "@/lib/auth-client";
@@ -39,7 +40,7 @@ export function LoginForm() {
 
   return (
     <>
-      <form onSubmit={onSubmit} noValidate className="space-y-5">
+      <form onSubmit={onSubmit} noValidate aria-busy={isSubmitting} className="space-y-5">
         <FormField label="Email address" htmlFor="email" required error={errors.email?.message}>
           <Input id="email" type="email" autoComplete="email" placeholder="you@example.com" aria-invalid={Boolean(errors.email)} {...register("email")} />
         </FormField>
@@ -50,7 +51,7 @@ export function LoginForm() {
           <span className="text-xs font-medium text-muted" title="Password reset is not part of this phase">Forgot password?</span>
         </div>
         <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Logging you in…" : "Log in"}
+          {isSubmitting ? <><Spinner className="size-4" label="Signing in" />Logging you in…</> : "Log in"}
         </Button>
       </form>
       <FormDivider />

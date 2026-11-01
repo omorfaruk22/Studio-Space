@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/loading";
 import { FormDivider } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { authClient } from "@/lib/auth-client";
@@ -45,7 +46,7 @@ export function RegisterForm() {
 
   return (
     <>
-      <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <form onSubmit={onSubmit} noValidate aria-busy={isSubmitting} className="space-y-4">
         <FormField label="Full name" htmlFor="name" required error={errors.name?.message}>
           <Input id="name" autoComplete="name" placeholder="Your name" aria-invalid={Boolean(errors.name)} {...register("name")} />
         </FormField>
@@ -59,7 +60,7 @@ export function RegisterForm() {
           <Input id="password" type="password" autoComplete="new-password" placeholder="Create a password" aria-invalid={Boolean(errors.password)} {...register("password")} />
         </FormField>
         <Button type="submit" size="lg" className="mt-2 w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Creating your account…" : "Create account"}
+          {isSubmitting ? <><Spinner className="size-4" label="Creating account" />Creating your account…</> : "Create account"}
         </Button>
       </form>
       <FormDivider />

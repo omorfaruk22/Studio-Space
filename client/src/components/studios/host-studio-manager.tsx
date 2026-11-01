@@ -6,6 +6,7 @@ import { ArrowRight, Eye, Pencil, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
+import { Spinner, StudioGridSkeleton } from "@/components/ui/loading";
 import type { HostStudio } from "@/lib/studio-types";
 import { studioCategoryLabels } from "@/lib/studio-types";
 
@@ -106,8 +107,8 @@ export function HostStudioManager() {
         </div>
       </div>
 
-      <div className="mt-5" aria-live="polite">
-        {loading ? <p className="rounded-2xl border border-line bg-white px-5 py-8 text-sm text-muted">Loading your listings…</p> : null}
+      <div className="mt-5" aria-live="polite" aria-busy={loading || Boolean(busyId)}>
+        {loading ? <StudioGridSkeleton count={4} label="Loading your studio listings" className="lg:grid-cols-2" /> : null}
         {!loading && error ? <div className="rounded-2xl border border-line bg-white px-5 py-8 text-center"><p className="text-sm text-muted" role="alert">{error}</p><button type="button" onClick={() => void loadStudios()} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-strong"><RefreshCw size={15} aria-hidden="true" />Try again</button></div> : null}
         {!loading && !error && studios.length === 0 ? <Card><CardContent className="px-6 py-9 text-center sm:py-12"><p className="font-serif text-2xl text-ink">Your first space starts here.</p><p className="mt-2 text-sm text-muted">Create a listing to help creators find your studio.</p><Link href="/add-studio" className="mt-5 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-strong">Create a listing <ArrowRight size={15} aria-hidden="true" /></Link></CardContent></Card> : null}
         {!loading && !error && studios.length > 0 ? <div className="grid gap-4 lg:grid-cols-2">{studios.map((studio) => (
@@ -124,7 +125,7 @@ export function HostStudioManager() {
               <div className="flex shrink-0 flex-wrap gap-2">
                 {studio.isAvailable ? <Link href={`/studios/${studio.id}`} aria-label={`View ${studio.title}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-ink hover:bg-sand"><Eye size={15} aria-hidden="true" /> View</Link> : null}
                 <Link href={`/studios/edit/${studio.id}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-ink hover:bg-sand"><Pencil size={15} aria-hidden="true" /> Edit</Link>
-                <button type="button" onClick={() => void setAvailability(studio)} disabled={busyId === studio.id} className="inline-flex min-h-10 items-center rounded-full border border-line px-3.5 text-sm font-semibold text-muted hover:bg-sand disabled:opacity-50">{busyId === studio.id ? "Saving…" : studio.isAvailable ? "Hide" : "Publish"}</button>
+                <button type="button" onClick={() => void setAvailability(studio)} disabled={busyId === studio.id} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-muted hover:bg-sand disabled:cursor-wait disabled:opacity-50">{busyId === studio.id ? <Spinner className="size-4" label="Updating listing" /> : null}{busyId === studio.id ? "Saving…" : studio.isAvailable ? "Hide" : "Publish"}</button>
                 <button type="button" onClick={() => setDeleteTarget(studio)} disabled={busyId === studio.id} className="inline-flex min-h-10 items-center rounded-full border border-red-200 px-3.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>
               </div>
             </CardContent>
@@ -138,8 +139,8 @@ export function HostStudioManager() {
         onClose={() => setDeleteTarget(null)}
       >
         <div className="flex justify-end gap-3">
-          <button type="button" onClick={() => setDeleteTarget(null)} className="min-h-10 rounded-full border border-line px-4 text-sm font-semibold text-ink hover:bg-sand">Keep listing</button>
-          <button type="button" onClick={() => void deleteStudio()} disabled={!deleteTarget || busyId === deleteTarget.id} className="min-h-10 rounded-full bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-50">{deleteTarget && busyId === deleteTarget.id ? "Deleting…" : "Delete permanently"}</button>
+          <button type="button" onClick={() => setDeleteTarget(null)} disabled={Boolean(deleteTarget && busyId === deleteTarget.id)} className="min-h-10 rounded-full border border-line px-4 text-sm font-semibold text-ink hover:bg-sand disabled:cursor-wait disabled:opacity-50">Keep listing</button>
+          <button type="button" onClick={() => void deleteStudio()} disabled={!deleteTarget || busyId === deleteTarget.id} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-wait disabled:opacity-50">{deleteTarget && busyId === deleteTarget.id ? <Spinner className="size-4" label="Deleting studio listing" /> : null}{deleteTarget && busyId === deleteTarget.id ? "Deleting…" : "Delete permanently"}</button>
         </div>
       </Dialog>
     </section>

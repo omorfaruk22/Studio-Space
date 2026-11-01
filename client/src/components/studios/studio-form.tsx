@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Input, Textarea } from "@/components/ui/input";
+import { Spinner, StudioFormSkeleton } from "@/components/ui/loading";
 import type { HostStudio, StudioCategory } from "@/lib/studio-types";
 import { studioCategoryLabels } from "@/lib/studio-types";
 
@@ -121,13 +122,13 @@ export function StudioForm({ studioId, hostName, hostEmail }: StudioFormProps) {
     }
   }
 
-  if (loading) return <p className="py-12 text-sm text-muted">Loading your studio…</p>;
+  if (loading) return <StudioFormSkeleton />;
   if (studioId && error && !studio) {
     return <div className="rounded-2xl border border-red-200 bg-white p-5 text-sm text-red-800" role="alert">{error}</div>;
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} aria-busy={submitting} className="space-y-6">
       {error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{error}</div> : null}
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -190,7 +191,7 @@ export function StudioForm({ studioId, hostName, hostEmail }: StudioFormProps) {
 
       <div className="flex flex-col-reverse gap-3 border-t border-line pt-5 sm:flex-row sm:justify-end">
         <Button type="button" variant="outline" onClick={() => router.push("/dashboard")}>Cancel</Button>
-        <Button type="submit" size="lg" disabled={submitting}>{submitting ? "Saving listing…" : studioId ? "Save changes" : "Create studio listing"}</Button>
+        <Button type="submit" size="lg" disabled={submitting}>{submitting ? <><Spinner className="size-4" label="Saving studio listing" />Saving listing…</> : studioId ? "Save changes" : "Create studio listing"}</Button>
       </div>
     </form>
   );

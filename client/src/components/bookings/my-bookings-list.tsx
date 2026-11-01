@@ -7,6 +7,7 @@ import { CalendarDays, Clock3, MapPin, RefreshCw, UsersRound } from "lucide-reac
 import { toast } from "sonner";
 import { Dialog } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import { BookingGridSkeleton, Spinner } from "@/components/ui/loading";
 import { formatDuration, type BookingStatus } from "@/lib/booking-types";
 
 type Booking = {
@@ -113,8 +114,8 @@ export function MyBookingsList() {
 
   return (
     <>
-      <div className="mt-7 space-y-4" aria-live="polite">
-        {loading ? <div className="grid gap-4 md:grid-cols-2" aria-label="Loading bookings">{Array.from({ length: 2 }, (_, index) => <div key={index} className="h-56 animate-pulse rounded-3xl bg-sage/60" />)}</div> : null}
+      <div className="mt-7 space-y-4" aria-live="polite" aria-busy={loading || cancelling}>
+        {loading ? <BookingGridSkeleton /> : null}
         {!loading && error ? <Card><CardContent className="px-6 py-10 text-center"><p className="text-sm text-muted" role="alert">{error}</p><button type="button" onClick={() => void loadBookings()} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-strong"><RefreshCw size={15} aria-hidden="true" />Try again</button></CardContent></Card> : null}
         {!loading && !error && bookings.length === 0 ? <Card><CardContent className="px-6 py-12 text-center"><span className="mx-auto grid size-12 place-items-center rounded-2xl bg-sage text-forest"><CalendarDays size={22} aria-hidden="true" /></span><h2 className="mt-4 font-serif text-2xl text-ink">No bookings yet</h2><p className="mt-2 text-sm text-muted">When you request a studio, its details and status will appear here.</p><Link href="/studios" className="mt-5 inline-flex min-h-11 items-center rounded-full bg-forest px-5 text-sm font-semibold text-white hover:bg-forest-strong">Explore studios</Link></CardContent></Card> : null}
         {!loading && !error && bookings.length > 0 ? <div className="grid gap-4 lg:grid-cols-2">{bookings.map((booking) => (
@@ -150,8 +151,8 @@ export function MyBookingsList() {
         onClose={() => { if (!cancelling) setCancelTarget(null); }}
       >
         <div className="flex justify-end gap-3">
-          <button type="button" disabled={cancelling} onClick={() => setCancelTarget(null)} className="min-h-10 rounded-full border border-line px-4 text-sm font-semibold text-ink hover:bg-sand disabled:opacity-50">Keep booking</button>
-          <button type="button" disabled={cancelling} onClick={() => void cancelBooking()} className="min-h-10 rounded-full bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-50">{cancelling ? "Cancelling…" : "Cancel booking"}</button>
+          <button type="button" disabled={cancelling} onClick={() => setCancelTarget(null)} className="min-h-10 rounded-full border border-line px-4 text-sm font-semibold text-ink hover:bg-sand disabled:cursor-wait disabled:opacity-50">Keep booking</button>
+          <button type="button" disabled={cancelling} onClick={() => void cancelBooking()} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-wait disabled:opacity-50">{cancelling ? <Spinner className="size-4" label="Cancelling booking" /> : null}{cancelling ? "Cancelling…" : "Cancel booking"}</button>
         </div>
       </Dialog>
     </>

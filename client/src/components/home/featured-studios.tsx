@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Aperture, ArrowRight, RefreshCw } from "lucide-react";
 import type { FeaturedStudio } from "@/lib/studio-types";
 import { StudioCard } from "@/components/studios/studio-card";
+import { StudioGridSkeleton } from "@/components/ui/loading";
 
 type FeaturedResponse = { studios: FeaturedStudio[] };
 
@@ -15,10 +16,6 @@ async function fetchFeaturedStudios(signal?: AbortSignal): Promise<FeaturedStudi
   if (!response.ok) throw new Error("Could not load featured studios.");
   const result = (await response.json()) as FeaturedResponse;
   return Array.isArray(result.studios) ? result.studios.slice(0, 6) : [];
-}
-
-function StudioSkeleton() {
-  return <div className="overflow-hidden rounded-3xl border border-line bg-white" aria-hidden="true"><div className="aspect-[1.36] animate-pulse bg-sage/70" /><div className="space-y-3 p-5"><div className="h-5 w-3/4 animate-pulse rounded bg-sand" /><div className="h-4 w-1/2 animate-pulse rounded bg-sand" /><div className="h-4 w-1/3 animate-pulse rounded bg-sand" /></div></div>;
 }
 
 export function FeaturedStudios() {
@@ -55,7 +52,7 @@ export function FeaturedStudios() {
   }, []);
 
   if (loading) {
-    return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading featured studios">{Array.from({ length: 6 }, (_, index) => <StudioSkeleton key={index} />)}</div>;
+    return <StudioGridSkeleton label="Loading featured studios" />;
   }
 
   if (error) {
@@ -66,5 +63,5 @@ export function FeaturedStudios() {
     return <div className="rounded-3xl border border-dashed border-line bg-white/70 px-6 py-10 text-center"><span className="mx-auto grid size-12 place-items-center rounded-2xl bg-sage text-forest"><Aperture size={23} aria-hidden="true" /></span><p className="mt-4 font-serif text-xl text-ink">The next great space belongs here.</p><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">Featured studios will appear here as hosts list their creative spaces.</p><Link href="/add-studio" className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-white transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Host your space <ArrowRight size={15} aria-hidden="true" /></Link></div>;
   }
 
-  return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{studios.map((studio) => <StudioCard key={studio.id} studio={studio} />)}</div>;
+  return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-live="polite" aria-busy={loading}>{studios.map((studio) => <StudioCard key={studio.id} studio={studio} />)}</div>;
 }
