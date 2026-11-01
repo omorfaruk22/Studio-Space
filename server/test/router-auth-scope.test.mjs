@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { app } from "../dist/app.js";
+import { confirmedBookingOverlapRange } from "../dist/lib/booking-overlap.js";
 
 let server;
 let baseUrl;
@@ -31,4 +32,11 @@ test("booking and host listing routes still require authentication", async () =>
     const response = await fetch(`${baseUrl}${path}`);
     assert.equal(response.status, 401, `${path} should reject anonymous access`);
   }
+});
+
+test("confirmed booking overlap query excludes adjacent slots and catches intersecting slots", () => {
+  assert.deepEqual(confirmedBookingOverlapRange("10:00", "11:00"), {
+    startTime: { $lt: "11:00" },
+    endTime: { $gt: "10:00" },
+  });
 });

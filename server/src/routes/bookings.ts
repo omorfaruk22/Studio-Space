@@ -2,6 +2,7 @@ import { Router } from "express";
 import mongoose from "mongoose";
 import { connectDatabase } from "../config/database.js";
 import { requireAuth } from "../middleware/requireAuth.js";
+import { confirmedBookingOverlapRange } from "../lib/booking-overlap.js";
 import { Booking } from "../models/Booking.js";
 import { Studio } from "../models/Studio.js";
 
@@ -128,6 +129,20 @@ bookingsRouter.post("/bookings", async (request, response, next) => {
     }
     if (numberOfPeople > studio.maxCapacity) {
       response.status(400).json({ status: "error", message: `This studio can host up to ${studio.maxCapacity} people.` });
+      return;
+    }
+
+    const confirmedConflict = await Booking.exists({
+      studioId: studio._id,
+      bookingDate,
+      status: "Confirmed",
+      ...confirmedBookingOverlapRange(startTime, endTime),
+    });
+    if (confirmedConflict) {
+      response.status(409).json({
+        status: "error",
+        message: "That time overlaps an already confirmed booking. Choose another time.",
+      });
       return;
     }
 

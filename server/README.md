@@ -39,7 +39,7 @@ Studio cover and gallery uploads use ImgBB. Set `IMGBB_API_KEY` in the server en
 
 Booking endpoints require a signed-in session and only expose the current user's bookings:
 
-- `POST /api/bookings` creates a `Pending` request. The API checks the studio's current rate, date, time range, and capacity, then calculates the rental total itself.
+- `POST /api/bookings` creates a `Pending` request. The API rejects a time range that overlaps an existing `Confirmed` booking, checks the studio's current rate, date, time range, and capacity, then calculates the rental total itself.
 - `GET /api/my-bookings` lists the signed-in user's requests with booking-time studio and price snapshots.
 - `GET /api/bookings/:id` returns one owned booking.
 - `PATCH /api/bookings/:id/cancel` cancels an owned `Pending` booking; other statuses return `409`.
