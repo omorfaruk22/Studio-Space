@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { connectDatabase } from "../config/database.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { confirmedBookingOverlapRange } from "../lib/booking-overlap.js";
+import { createBookingInvoicePdf } from "../lib/booking-invoice-pdf.js";
 import { Booking } from "../models/Booking.js";
 import { Studio } from "../models/Studio.js";
 
@@ -348,6 +349,56 @@ bookingsRouter.get("/bookings/:id", async (request, response, next) => {
       return;
     }
     response.json({ booking: serializeBooking(booking) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+bookingsRouter.get("/bookings/:id/invoice", async (request, response, next) => {
+  try {
+    if (!idPattern.test(request.params.id)) {
+      response.status(400).json({ status: "error", message: "Invalid booking ID." });
+      return;
+    }
+
+    const database = await connectDatabase();
+    if (!database) {
+      response.status(503).json({ status: "error", message: "Bookings are temporarily unavailable." });
+      return;
+    }
+
+    const session = response.locals.authSession as { user: { id: string } };
+    const booking = await Booking.findOne({
+      _id: request.params.id,
+      userId: session.user.id,
+      status: "Confirmed",
+    }).lean();
+    if (!booking) {
+      const ownedBooking = await Booking.exists({ _id: request.params.id, userId: session.user.id });
+      response.status(ownedBooking ? 409 : 404).json({
+        status: "error",
+        message: ownedBooking ? "A PDF summary is available after the host confirms this booking." : "Booking not found.",
+      });
+      return;
+    }
+
+    const pdf = createBookingInvoicePdf({
+      id: String(booking._id),
+      studioTitle: booking.studioTitle,
+      studioLocation: booking.studioLocation,
+      bookingDate: booking.bookingDate,
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      numberOfPeople: booking.numberOfPeople,
+      durationMinutes: booking.durationMinutes,
+      hourlyRate: booking.hourlyRate,
+      totalPrice: booking.totalPrice,
+      securityDeposit: booking.securityDeposit,
+    });
+    response.setHeader("Content-Type", "application/pdf");
+    response.setHeader("Content-Disposition", `attachment; filename="studio-booking-${booking._id}.pdf"`);
+    response.setHeader("Cache-Control", "private, no-store");
+    response.send(pdf);
   } catch (error) {
     next(error);
   }

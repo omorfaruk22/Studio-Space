@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { CalendarDays, Clock3, MapPin, RefreshCw, UsersRound } from "lucide-react";
+import { CalendarDays, Clock3, Download, MapPin, RefreshCw, UsersRound } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,6 +68,7 @@ export function MyBookingsList() {
   const [error, setError] = useState("");
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [invoiceBookingId, setInvoiceBookingId] = useState("");
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
@@ -112,6 +113,30 @@ export function MyBookingsList() {
     }
   }
 
+  async function downloadInvoice(booking: Booking) {
+    setInvoiceBookingId(booking.id);
+    try {
+      const response = await fetch(`/api/bookings/${booking.id}/invoice`, { credentials: "same-origin", cache: "no-store" });
+      if (!response.ok) {
+        const result = await response.json() as { message?: string };
+        throw new Error(result.message || "Could not download this booking summary.");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `studio-booking-${booking.id}.pdf`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Could not download this booking summary.");
+    } finally {
+      setInvoiceBookingId("");
+    }
+  }
+
   return (
     <>
       <div className="mt-7 space-y-4" aria-live="polite" aria-busy={loading || cancelling}>
@@ -135,9 +160,12 @@ export function MyBookingsList() {
                   <p className="flex items-center gap-2 text-ink"><Clock3 size={15} className="text-muted" aria-hidden="true" />{formatTime(booking.startTime)}–{formatTime(booking.endTime)} ({formatDuration(booking.durationMinutes)})</p>
                   <p className="flex items-center gap-2 text-ink"><UsersRound size={15} className="text-muted" aria-hidden="true" />{booking.numberOfPeople} {booking.numberOfPeople === 1 ? "person" : "people"}</p>
                 </div>
-                <div className="mt-4 flex items-end justify-between gap-4 border-t border-line pt-4">
+                <div className="mt-4 flex flex-wrap items-end justify-between gap-4 border-t border-line pt-4">
                   <div><p className="text-xs text-muted">Rental total</p><p className="mt-1 font-semibold text-ink">{money(booking.totalPrice)}</p><p className="mt-1 text-xs text-muted">Deposit: {booking.securityDeposit ? money(booking.securityDeposit) : "None"}</p></div>
-                  {booking.status === "Pending" ? <button type="button" onClick={() => setCancelTarget(booking)} className="min-h-9 rounded-full border border-line px-3.5 text-xs font-semibold text-ink hover:bg-sand">Cancel request</button> : null}
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {booking.status === "Confirmed" ? <button type="button" onClick={() => void downloadInvoice(booking)} disabled={invoiceBookingId === booking.id} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line px-3.5 text-xs font-semibold text-ink hover:bg-sand disabled:cursor-wait disabled:opacity-50">{invoiceBookingId === booking.id ? <Spinner className="size-3.5" label="Downloading booking PDF" /> : <Download size={14} aria-hidden="true" />}{invoiceBookingId === booking.id ? "Preparing PDF…" : "Download PDF"}</button> : null}
+                    {booking.status === "Pending" ? <button type="button" onClick={() => setCancelTarget(booking)} className="min-h-9 rounded-full border border-line px-3.5 text-xs font-semibold text-ink hover:bg-sand">Cancel request</button> : null}
+                  </div>
                 </div>
               </CardContent>
             </div>
