@@ -35,6 +35,17 @@ All host studio routes require a signed-in session and scope records to the auth
 
 Studio cover and gallery uploads use ImgBB. Set `IMGBB_API_KEY` in the server environment; uploads are proxied through the authenticated API and limited to JPEG, PNG, and WebP images up to 8 MB each.
 
+## Booking API
+
+Booking endpoints require a signed-in session and only expose the current user's bookings:
+
+- `POST /api/bookings` creates a `Pending` request. The API checks the studio's current rate, date, time range, and capacity, then calculates the rental total itself.
+- `GET /api/my-bookings` lists the signed-in user's requests with booking-time studio and price snapshots.
+- `GET /api/bookings/:id` returns one owned booking.
+- `PATCH /api/bookings/:id/cancel` cancels an owned `Pending` booking; other statuses return `409`.
+
+The current phase does not yet prevent overlapping reservations. Double-booking protection is planned for the next security phase.
+
 ## Health check
 
 `GET /api/health` returns the API status, uptime, and Mongoose connection state. A missing or unavailable database is reported as `disconnected`; it does not prevent the HTTP server from starting during local setup.

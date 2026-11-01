@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, MapPin, ShieldCheck, Star, UsersRound } from "lucide-react";
-import { BookingNoticeButton } from "@/components/studios/booking-notice-button";
+import { BookingDialogButton } from "@/components/bookings/booking-dialog-button";
 import { StudioGallery } from "@/components/studios/studio-gallery";
 import { SectionHeading } from "@/components/ui/section-heading";
 import type { FeaturedStudio } from "@/lib/studio-types";
 import { studioCategoryLabels } from "@/lib/studio-types";
+import { getCurrentSession } from "@/lib/server-session";
 
 type StudioDetails = FeaturedStudio & {
   images: string[];
@@ -21,7 +22,7 @@ function MessagePage({ title, description, href, linkLabel }: { title: string; d
   return <main className="mx-auto flex w-full max-w-page flex-1 flex-col items-center justify-center px-5 py-24 text-center sm:px-8"><div className="max-w-lg rounded-[2rem] border border-line bg-white p-8 shadow-card sm:p-12"><h1 className="font-serif text-3xl tracking-tight text-ink">{title}</h1><p className="mt-3 text-sm leading-6 text-muted">{description}</p><Link href={href} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-forest px-5 text-sm font-semibold text-white transition hover:bg-forest-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"><ArrowLeft size={16} aria-hidden="true" />{linkLabel}</Link></div></main>;
 }
 
-function StudioContent({ studio }: { studio: StudioDetails }) {
+function StudioContent({ studio, isAuthenticated }: { studio: StudioDetails; isAuthenticated: boolean }) {
   const gallery = [studio.image, ...studio.images];
   const category = studioCategoryLabels[studio.category] ?? "Creative space";
 
@@ -76,8 +77,10 @@ function StudioContent({ studio }: { studio: StudioDetails }) {
               <p className="flex items-center justify-between gap-3"><span className="inline-flex items-center gap-2 text-muted"><UsersRound size={15} aria-hidden="true" />Capacity</span><span className="font-semibold text-ink">Up to {studio.maxCapacity}</span></p>
               <p className="flex items-center justify-between gap-3"><span className="text-muted">Location</span><span className="max-w-40 text-right font-semibold text-ink">{studio.location}</span></p>
             </div>
-            <BookingNoticeButton />
-            <p className="mt-3 text-center text-xs leading-5 text-muted">No payment is due now. Online reservations are coming soon.</p>
+            <BookingDialogButton
+              studio={{ id: studio.id, title: studio.title, hourlyRate: studio.hourlyRate, securityDeposit: studio.securityDeposit, maxCapacity: studio.maxCapacity }}
+              isAuthenticated={isAuthenticated}
+            />
           </div>
           <Link href="/studios" className="mt-4 inline-flex min-h-10 items-center gap-2 px-2 text-sm font-semibold text-brand-strong hover:underline">Explore more spaces <ArrowRight size={15} aria-hidden="true" /></Link>
         </aside>
@@ -103,5 +106,11 @@ export default async function StudioDetailsPage({ params }: PageProps<"/studios/
   }
 
   const result = await response.json() as { studio: StudioDetails };
-  return <StudioContent studio={result.studio} />;
+  let isAuthenticated = false;
+  try {
+    isAuthenticated = Boolean(await getCurrentSession());
+  } catch {
+    // Public studio details remain viewable if the session service is temporarily unavailable.
+  }
+  return <StudioContent studio={result.studio} isAuthenticated={isAuthenticated} />;
 }

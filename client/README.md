@@ -25,6 +25,8 @@ Hosts can upload JPEG, PNG, or WebP cover and gallery images up to 8 MB each. Co
 
 ## Studio discovery
 
-The home page includes a three-slide hero, featured studios loaded from the API, category links, booking guidance, and host support information. The `/studios` page supports title search, category, location, hourly price range, and sorting filters. Each studio links to `/studios/[id]` for its gallery, overview, amenities, host details, and review summary.
+The home page includes a three-slide hero, featured studios loaded from the API, category links, booking guidance, and host support information. The `/studios` page supports title search, category, location, hourly price range, and sorting filters. Each studio links to `/studios/[id]` for its gallery, overview, amenities, host details, review summary, and booking request form.
 
-Public studio data is fetched from the Express API at `NEXT_PUBLIC_API_URL`. When there are no studio records, the home page and discovery page show friendly empty states. Online reservations are implemented in a later project phase.
+Public studio data is fetched from the Express API at `NEXT_PUBLIC_API_URL`. When there are no studio records, the home page and discovery page show friendly empty states.
+
+Signed-in creators can request a studio booking from its details page and review or cancel pending requests at `/my-bookings`. Prices are calculated by the server from the current studio rate; this app does not collect payments.

@@ -42,7 +42,7 @@ See `client/.env.example` and `server/.env.example`. Never commit real credentia
 
 ## Current phase
 
-The application now includes the responsive StudioSpace UI, email/Google authentication, database-backed studio discovery, studio detail pages, and host studio listing management. Online bookings are the next product phase.
+The application now includes the responsive StudioSpace UI, email/Google authentication, database-backed studio discovery, studio detail pages, host studio listing management, and pending booking requests. Double-booking protection and theme customization are the next product phase.
 
 ## Deployment
 
