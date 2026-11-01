@@ -36,8 +36,20 @@ export function RegisterForm() {
         return;
       }
 
-      toast.success("Your StudioSpace account is ready.");
-      router.push("/");
+      let signedOut = false;
+      try {
+        const signOutResult = await authClient.signOut();
+        signedOut = !signOutResult.error;
+      } catch {
+        signedOut = false;
+      }
+
+      if (signedOut) {
+        toast.success("Your account is ready. Please log in.");
+      } else {
+        toast.message("Your account is ready. Log out, then log in to continue.");
+      }
+      router.replace("/login");
       router.refresh();
     } catch {
       toast.error("Could not connect to the authentication server.");

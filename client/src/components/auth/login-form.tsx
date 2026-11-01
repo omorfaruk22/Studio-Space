@@ -12,6 +12,7 @@ import { Spinner } from "@/components/ui/loading";
 import { FormDivider } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { authClient } from "@/lib/auth-client";
+import { getAuthCallbackUrl } from "@/lib/auth-redirect";
 import { loginSchema, type LoginValues } from "@/lib/auth-schemas";
 
 export function LoginForm() {
@@ -22,8 +23,9 @@ export function LoginForm() {
   });
 
   const onSubmit = handleSubmit(async ({ email, password }) => {
+    const callbackURL = getAuthCallbackUrl(window.location.pathname, window.location.search);
     try {
-      const result = await authClient.signIn.email({ email, password, callbackURL: "/" });
+      const result = await authClient.signIn.email({ email, password, callbackURL });
 
       if (result.error) {
         toast.error(result.error.message || "Email or password was not accepted.");
@@ -31,7 +33,7 @@ export function LoginForm() {
       }
 
       toast.success("Welcome back to StudioSpace.");
-      router.push("/");
+      router.replace(callbackURL);
       router.refresh();
     } catch {
       toast.error("Could not connect to the authentication server.");

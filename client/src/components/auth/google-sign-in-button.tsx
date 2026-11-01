@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import { getAuthCallbackUrl } from "@/lib/auth-redirect";
 import { Button } from "@/components/ui/button";
 
 export function GoogleSignInButton() {
@@ -20,7 +21,8 @@ export function GoogleSignInButton() {
   async function signInWithGoogle() {
     setIsLoading(true);
     try {
-      const result = await authClient.signIn.social({ provider: "google", callbackURL: "/" });
+      const callbackURL = getAuthCallbackUrl(window.location.pathname, window.location.search);
+      const result = await authClient.signIn.social({ provider: "google", callbackURL });
       if (result.error) {
         toast.error(result.error.message || "Google sign-in could not be started.");
         setIsLoading(false);
