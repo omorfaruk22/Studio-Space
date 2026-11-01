@@ -43,8 +43,11 @@ Booking endpoints require a signed-in session and only expose the current user's
 - `GET /api/my-bookings` lists the signed-in user's requests with booking-time studio and price snapshots.
 - `GET /api/bookings/:id` returns one owned booking.
 - `PATCH /api/bookings/:id/cancel` cancels an owned `Pending` booking; other statuses return `409`.
+- `GET /api/host/bookings` lists bookings only for studios owned by the signed-in host.
+- `PATCH /api/host/bookings/:id/confirm` confirms an owned pending request unless it overlaps another confirmed booking for that studio and date; a conflict returns `409`.
+- `PATCH /api/host/bookings/:id/decline` declines an owned pending request.
 
-The current phase does not yet prevent overlapping reservations. Double-booking protection is planned for the next security phase.
+Confirmation checks run in a MongoDB transaction and update a per-studio revision field so concurrent confirmation requests serialize before the overlap check.
 
 ## Health check
 

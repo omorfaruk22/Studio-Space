@@ -1,4 +1,4 @@
-export type BookingStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled";
+export type BookingStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled" | "Declined";
 
 export function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);

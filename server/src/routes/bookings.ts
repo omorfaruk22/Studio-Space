@@ -1,4 +1,5 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import { connectDatabase } from "../config/database.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { Booking } from "../models/Booking.js";
@@ -6,25 +7,11 @@ import { Studio } from "../models/Studio.js";
 
 export const bookingsRouter = Router();
 
+class BookingConflictError extends Error {}
+
 const idPattern = /^[a-f\d]{24}$/i;
 const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
 const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
-
-function timeInMinutes(time: string): number {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-function isRealDate(value: string): boolean {
-  const match = datePattern.exec(value);
-  if (!match) return false;
-  const [, yearText, monthText, dayText] = match;
-  const year = Number(yearText);
-  const month = Number(monthText);
-  const day = Number(dayText);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
-}
 
 function serializeBooking(booking: {
   _id: unknown;
@@ -64,6 +51,22 @@ function serializeBooking(booking: {
     createdAt: booking.createdAt?.toISOString(),
     updatedAt: booking.updatedAt?.toISOString(),
   };
+}
+
+function timeInMinutes(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function isRealDate(value: string): boolean {
+  const match = datePattern.exec(value);
+  if (!match) return false;
+  const [, yearText, monthText, dayText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
 bookingsRouter.use(requireAuth);
@@ -161,6 +164,146 @@ bookingsRouter.get("/my-bookings", async (_request, response, next) => {
     const session = response.locals.authSession as { user: { id: string } };
     const bookings = await Booking.find({ userId: session.user.id }).sort({ createdAt: -1 }).lean();
     response.json({ bookings: bookings.map(serializeBooking) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+bookingsRouter.get("/host/bookings", async (_request, response, next) => {
+  try {
+    const database = await connectDatabase();
+    if (!database) {
+      response.status(503).json({ status: "error", message: "Bookings are temporarily unavailable." });
+      return;
+    }
+
+    const session = response.locals.authSession as { user: { id: string } };
+    const studios = await Studio.find({ ownerId: session.user.id }).select("_id").lean();
+    const studioIds = studios.map((studio) => studio._id);
+    const bookings = studioIds.length
+      ? await Booking.find({ studioId: { $in: studioIds } }).sort({ createdAt: -1 }).lean()
+      : [];
+    response.json({ bookings: bookings.map(serializeBooking) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+bookingsRouter.patch("/host/bookings/:id/confirm", async (request, response, next) => {
+  try {
+    if (!idPattern.test(request.params.id)) {
+      response.status(400).json({ status: "error", message: "Invalid booking ID." });
+      return;
+    }
+
+    const database = await connectDatabase();
+    if (!database) {
+      response.status(503).json({ status: "error", message: "Bookings are temporarily unavailable." });
+      return;
+    }
+
+    const sessionUser = response.locals.authSession as { user: { id: string } };
+    const mongoSession = await mongoose.startSession();
+    try {
+      const result = await mongoSession.withTransaction(async () => {
+        const booking = await Booking.findOne({ _id: request.params.id, status: "Pending" }).session(mongoSession);
+        if (!booking) return { kind: "not-pending" as const };
+
+        // Updating the same studio document forces concurrent confirmations to retry
+        // against the latest confirmed bookings instead of both passing a stale read.
+        const studio = await Studio.findOneAndUpdate(
+          { _id: booking.studioId, ownerId: sessionUser.user.id },
+          { $inc: { bookingRevision: 1 } },
+          { new: true, session: mongoSession },
+        );
+        if (!studio) return { kind: "not-owned" as const };
+
+        const overlap = await Booking.exists({
+          studioId: booking.studioId,
+          bookingDate: booking.bookingDate,
+          status: "Confirmed",
+          startTime: { $lt: booking.endTime },
+          endTime: { $gt: booking.startTime },
+        }).session(mongoSession);
+        if (overlap) throw new BookingConflictError("That time overlaps another confirmed booking.");
+
+        booking.status = "Confirmed";
+        await booking.save({ session: mongoSession });
+        return { kind: "confirmed" as const, booking: serializeBooking(booking) };
+      });
+
+      if (result?.kind === "not-owned") {
+        response.status(404).json({ status: "error", message: "Booking not found." });
+        return;
+      }
+      if (result?.kind === "not-pending") {
+        const ownedBooking = await Booking.findById(request.params.id).lean();
+        if (!ownedBooking) {
+          response.status(404).json({ status: "error", message: "Booking not found." });
+        } else {
+          const ownedStudio = await Studio.exists({ _id: ownedBooking.studioId, ownerId: sessionUser.user.id });
+          response.status(ownedStudio ? 409 : 404).json({
+            status: "error",
+            message: ownedStudio ? "Only pending booking requests can be confirmed." : "Booking not found.",
+          });
+        }
+        return;
+      }
+      if (result?.kind === "confirmed") {
+        response.json({ booking: result.booking });
+        return;
+      }
+      response.status(500).json({ status: "error", message: "The booking could not be confirmed." });
+    } catch (error) {
+      if (error instanceof BookingConflictError) {
+        response.status(409).json({ status: "error", message: error.message });
+        return;
+      }
+      throw error;
+    } finally {
+      await mongoSession.endSession();
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+bookingsRouter.patch("/host/bookings/:id/decline", async (request, response, next) => {
+  try {
+    if (!idPattern.test(request.params.id)) {
+      response.status(400).json({ status: "error", message: "Invalid booking ID." });
+      return;
+    }
+
+    const database = await connectDatabase();
+    if (!database) {
+      response.status(503).json({ status: "error", message: "Bookings are temporarily unavailable." });
+      return;
+    }
+
+    const session = response.locals.authSession as { user: { id: string } };
+    const booking = await Booking.findById(request.params.id).select("studioId").lean();
+    if (!booking) {
+      response.status(404).json({ status: "error", message: "Booking not found." });
+      return;
+    }
+
+    const ownedStudio = await Studio.exists({ _id: booking.studioId, ownerId: session.user.id });
+    if (!ownedStudio) {
+      response.status(404).json({ status: "error", message: "Booking not found." });
+      return;
+    }
+
+    const declinedBooking = await Booking.findOneAndUpdate(
+      { _id: request.params.id, studioId: booking.studioId, status: "Pending" },
+      { $set: { status: "Declined" } },
+      { new: true, runValidators: true },
+    ).lean();
+    if (!declinedBooking) {
+      response.status(409).json({ status: "error", message: "Only pending booking requests can be declined." });
+      return;
+    }
+    response.json({ booking: serializeBooking(declinedBooking) });
   } catch (error) {
     next(error);
   }

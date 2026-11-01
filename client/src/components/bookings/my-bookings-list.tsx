@@ -58,6 +58,7 @@ const statusStyles: Record<BookingStatus, string> = {
   Confirmed: "bg-emerald-50 text-emerald-800",
   Completed: "bg-sage text-forest",
   Cancelled: "bg-sand text-muted",
+  Declined: "bg-red-50 text-red-800",
 };
 
 export function MyBookingsList() {

@@ -15,7 +15,7 @@ const bookingSchema = new mongoose.Schema(
     hourlyRate: { type: Number, required: true, min: 0 },
     totalPrice: { type: Number, required: true, min: 0 },
     securityDeposit: { type: Number, required: true, min: 0 },
-    status: { type: String, enum: ["Pending", "Confirmed", "Completed", "Cancelled"], default: "Pending", required: true },
+    status: { type: String, enum: ["Pending", "Confirmed", "Completed", "Cancelled", "Declined"], default: "Pending", required: true },
   },
   { timestamps: true, versionKey: false },
 );

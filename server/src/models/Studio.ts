@@ -20,6 +20,8 @@ const studioSchema = new mongoose.Schema(
     ownerId: { type: String, required: true, index: true },
     ownerName: { type: String, required: true, trim: true },
     ownerEmail: { type: String, required: true, trim: true, lowercase: true },
+    // Writes to this field serialize booking confirmations for this studio.
+    bookingRevision: { type: Number, default: 0, select: false },
     rating: { type: Number, min: 0, max: 5, default: 0, index: true },
     isAvailable: { type: Boolean, default: true, index: true },
   },

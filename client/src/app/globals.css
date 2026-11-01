@@ -16,6 +16,22 @@
   --focus: #176d7b;
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #121a18;
+  --paper: #1b2724;
+  --ink: #edf3ee;
+  --muted: #a3b3ab;
+  --line: #35443e;
+  --sand: #27352f;
+  --brand: #db765a;
+  --brand-strong: #f08a6b;
+  --forest: #285448;
+  --forest-strong: #356b59;
+  --sage: #2b4038;
+  --focus: #73b7bd;
+}
+
 @theme inline {
   --color-canvas: var(--canvas);
   --color-paper: var(--paper);
@@ -46,6 +62,48 @@ body {
   background: var(--canvas);
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+:root[data-theme="dark"] .bg-white,
+:root[data-theme="dark"] [class~="bg-white/70"] {
+  background-color: var(--paper);
+}
+
+:root[data-theme="dark"] [class~="bg-white/90"],
+:root[data-theme="dark"] [class~="bg-white/95"] {
+  background-color: color-mix(in srgb, var(--paper) 94%, transparent);
+}
+
+:root[data-theme="dark"] .bg-amber-50 {
+  background-color: #443718;
+}
+
+:root[data-theme="dark"] .text-amber-800 {
+  color: #f4d48a;
+}
+
+:root[data-theme="dark"] .bg-emerald-50 {
+  background-color: #183d31;
+}
+
+:root[data-theme="dark"] .text-emerald-800 {
+  color: #9ee0bc;
+}
+
+:root[data-theme="dark"] .text-forest {
+  color: #b8d8c7;
+}
+
+:root[data-theme="dark"] .bg-red-50 {
+  background-color: #482b2b;
+}
+
+:root[data-theme="dark"] .text-red-800 {
+  color: #ffc0b8;
+}
+
+:root[data-theme="dark"] .border-red-200 {
+  border-color: #784443;
 }
 
 button,

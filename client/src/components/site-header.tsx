@@ -16,6 +16,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { primaryNavigation } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export type HeaderUser = {
   name: string;
@@ -32,6 +33,7 @@ const accountLinks = [
   { label: "Add New Studio", href: "/add-studio", icon: Plus },
   { label: "My Studio Listings", href: "/my-listings", icon: Aperture },
   { label: "My Bookings", href: "/my-bookings", icon: CalendarDays },
+  { label: "Booking Requests", href: "/host-bookings", icon: CalendarDays },
 ] as const;
 
 function initials(name: string) {
@@ -117,6 +119,7 @@ export function SiteHeader({ user = null }: SiteHeaderProps) {
         </nav>
 
         <div className="hidden items-center gap-2.5 lg:flex">
+          <ThemeToggle />
           {user ? (
             <>
               <Link href="/add-studio" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-white transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
@@ -160,16 +163,19 @@ export function SiteHeader({ user = null }: SiteHeaderProps) {
           )}
         </div>
 
-        <button
-          type="button"
-          className="grid size-11 place-items-center rounded-full border border-line bg-white text-ink transition hover:bg-sand focus-visible:outline-2 focus-visible:outline-focus lg:hidden"
-          aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-navigation"
-          onClick={() => setMobileOpen((open) => !open)}
-        >
-          {mobileOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
-        </button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            className="grid size-11 place-items-center rounded-full border border-line bg-white text-ink transition hover:bg-sand focus-visible:outline-2 focus-visible:outline-focus"
+            aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setMobileOpen((open) => !open)}
+          >
+            {mobileOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+          </button>
+        </div>
       </div>
 
       {mobileOpen ? (
