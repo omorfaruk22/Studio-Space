@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Script from "next/script";
 import { Toaster } from "sonner";
 import { SiteFooter } from "@/components/site-footer";
+import { SavedStudiosProvider } from "@/components/studios/saved-studios-provider";
 import { SessionAwareHeader } from "@/components/auth/session-aware-header";
 import "./globals.css";
 
@@ -20,12 +21,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </Script>
       </head>
       <body className="min-h-full flex flex-col font-sans">
-        <Suspense fallback={<div aria-hidden="true" className="sticky top-0 z-50 h-[76px] border-b border-line/80 bg-canvas/95" />}>
-          <SessionAwareHeader />
-        </Suspense>
-        {children}
-        <SiteFooter />
-        <Toaster position="top-right" richColors />
+        <SavedStudiosProvider>
+          <Suspense fallback={<div aria-hidden="true" className="sticky top-0 z-50 h-[76px] border-b border-line/80 bg-canvas/95" />}>
+            <SessionAwareHeader />
+          </Suspense>
+          {children}
+          <SiteFooter />
+          <Toaster position="top-right" richColors />
+        </SavedStudiosProvider>
       </body>
     </html>
   );

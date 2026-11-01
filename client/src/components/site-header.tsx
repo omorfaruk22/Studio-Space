@@ -5,6 +5,7 @@ import {
   Aperture,
   CalendarDays,
   ChevronDown,
+  Heart,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -32,6 +33,7 @@ type SiteHeaderProps = {
 const accountLinks = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Add New Studio", href: "/add-studio", icon: Plus },
+  { label: "Saved Studios", href: "/saved-studios", icon: Heart },
   { label: "My Studio Listings", href: "/my-listings", icon: Aperture },
   { label: "My Bookings", href: "/my-bookings", icon: CalendarDays },
   { label: "Booking Requests", href: "/host-bookings", icon: CalendarDays },
