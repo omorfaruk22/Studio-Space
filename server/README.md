@@ -30,8 +30,10 @@ All host studio routes require a signed-in session and scope records to the auth
 - `POST /api/host/studios` creates a listing using the signed-in account as its owner.
 - `GET /api/host/studios/:id` returns one owned listing, including hidden listings.
 - `PATCH /api/host/studios/:id` updates listing details.
-- `DELETE /api/host/studios/:id` hides a listing from public search without deleting its data.
+- `DELETE /api/host/studios/:id` permanently deletes an owned listing.
 - `PATCH /api/host/studios/:id/availability` accepts `{ "isAvailable": true }` to publish a hidden listing again.
+
+Studio cover and gallery uploads use ImgBB. Set `IMGBB_API_KEY` in the server environment; uploads are proxied through the authenticated API and limited to JPEG, PNG, and WebP images up to 8 MB each.
 
 ## Health check
 

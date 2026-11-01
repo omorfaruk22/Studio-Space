@@ -12,7 +12,7 @@ export default async function AddStudioPage() {
       <h1 className="mt-3 font-serif text-4xl tracking-tight text-ink sm:text-5xl">Create your studio listing</h1>
       <p className="mt-4 max-w-2xl text-base leading-7 text-muted">Add the essentials creators need to discover and compare your space. You can update the listing from your dashboard.</p>
       <section className="mt-8 rounded-3xl border border-line bg-white p-5 shadow-card sm:p-8">
-        <StudioForm />
+        <StudioForm hostName={session.user.name} hostEmail={session.user.email} />
       </section>
     </main>
   );

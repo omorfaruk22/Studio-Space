@@ -6,7 +6,7 @@ StudioSpace uses Vercel for the Next.js client, Render for the Express API, and 
 
 1. In Render, choose **New → Blueprint** and connect this GitHub repository on `main`.
 2. Render reads the root `render.yaml`. Confirm that the service root is `server`, with build command `npm ci && npm run build`, start command `npm start`, and health check `/api/health`.
-3. Supply the prompted environment variables. Set `MONGODB_URI` to the Atlas connection string. Use your Vercel production origin for `CLIENT_ORIGIN` and `BETTER_AUTH_URL` once you have it; both values are origins such as `https://your-project.vercel.app`, without a trailing slash. If you deploy Render first and don't have the Vercel URL yet, temporarily use `http://localhost:3000` for both, then replace both with the Vercel production origin and redeploy. Enter the Google OAuth Web Client ID and secret in Render's environment settings.
+3. Supply the prompted environment variables. Set `MONGODB_URI` to the Atlas connection string. Use your Vercel production origin for `CLIENT_ORIGIN` and `BETTER_AUTH_URL` once you have it; both values are origins such as `https://your-project.vercel.app`, without a trailing slash. If you deploy Render first and don't have the Vercel URL yet, temporarily use `http://localhost:3000` for both, then replace both with the Vercel production origin and redeploy. Enter the Google OAuth Web Client ID and secret in Render's environment settings. Add `IMGBB_API_KEY` there to enable authenticated studio image uploads.
 4. Create the service and copy its `onrender.com` URL. In the Render service's **Connect → Outbound** panel, copy the outbound CIDR ranges for its region. Add those ranges to the MongoDB Atlas project's **Network Access → IP Access List**, then redeploy or restart the Render service and confirm `GET /api/health` reports `database: "connected"`.
 
 Do not use `0.0.0.0/0` for Atlas access. Render's outbound ranges can be shared and can change; use the ranges shown for the service, or a dedicated outbound IP if your Render plan supports it. See the [Render outbound IP guide](https://render.com/docs/outbound-ip-addresses) and [Atlas IP access list guide](https://www.mongodb.com/docs/atlas/security/ip-access-list/).
@@ -27,7 +27,7 @@ In Render, set both `CLIENT_ORIGIN` and `BETTER_AUTH_URL` to the exact Vercel pr
 - Authorized JavaScript origin: `https://your-project.vercel.app`
 - Authorized redirect URI: `https://your-project.vercel.app/api/auth/callback/google`
 
-Use the actual Vercel origin in both entries. Keep `MONGODB_URI`, `BETTER_AUTH_SECRET`, and `GOOGLE_CLIENT_SECRET` in provider environment settings only; never commit them. Render generates `BETTER_AUTH_SECRET` from the Blueprint.
+Use the actual Vercel origin in both entries. Keep `MONGODB_URI`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, and `IMGBB_API_KEY` in provider environment settings only; never commit them. Render generates `BETTER_AUTH_SECRET` from the Blueprint.
 
 ## 4. Verify the deployment
 

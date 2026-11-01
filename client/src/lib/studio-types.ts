@@ -18,6 +18,8 @@ export type HostStudio = FeaturedStudio & {
   amenities: string[];
   overview: string;
   isAvailable: boolean;
+  ownerName: string;
+  ownerEmail: string;
   updatedAt?: string;
 };
 

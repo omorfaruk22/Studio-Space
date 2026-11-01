@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, Eye, Pencil, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog } from "@/components/ui/dialog";
 import type { HostStudio } from "@/lib/studio-types";
 import { studioCategoryLabels } from "@/lib/studio-types";
 
@@ -24,6 +25,7 @@ export function HostStudioManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<HostStudio | null>(null);
 
   const loadStudios = useCallback(async () => {
     setLoading(true);
@@ -70,6 +72,26 @@ export function HostStudioManager() {
     }
   }
 
+  async function deleteStudio() {
+    if (!deleteTarget) return;
+    setBusyId(deleteTarget.id);
+    try {
+      const response = await fetch(`/api/host/studios/${deleteTarget.id}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const result = (await response.json()) as { message?: string };
+      if (!response.ok) throw new Error(result.message || "Could not delete this listing.");
+      setStudios((current) => current.filter((item) => item.id !== deleteTarget.id));
+      toast.success("Studio listing deleted.");
+      setDeleteTarget(null);
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Could not delete this listing.");
+    } finally {
+      setBusyId("");
+    }
+  }
+
   return (
     <section className="mt-12" aria-labelledby="your-listings-heading">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -78,7 +100,10 @@ export function HostStudioManager() {
           <h2 id="your-listings-heading" className="mt-2 font-serif text-3xl tracking-tight text-ink">Your studio listings</h2>
           <p className="mt-2 text-sm leading-6 text-muted">Create, update, and control which spaces appear in search.</p>
         </div>
-        <Link href="/add-studio" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"><Plus size={17} aria-hidden="true" /> Add studio</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/my-listings" className="inline-flex min-h-11 items-center justify-center rounded-full border border-line bg-white px-5 text-sm font-semibold text-ink transition hover:bg-sand">My listings</Link>
+          <Link href="/add-studio" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"><Plus size={17} aria-hidden="true" /> Add studio</Link>
+        </div>
       </div>
 
       <div className="mt-5" aria-live="polite">
@@ -98,13 +123,25 @@ export function HostStudioManager() {
               </div>
               <div className="flex shrink-0 flex-wrap gap-2">
                 {studio.isAvailable ? <Link href={`/studios/${studio.id}`} aria-label={`View ${studio.title}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-ink hover:bg-sand"><Eye size={15} aria-hidden="true" /> View</Link> : null}
-                <Link href={`/dashboard/studios/${studio.id}/edit`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-ink hover:bg-sand"><Pencil size={15} aria-hidden="true" /> Edit</Link>
+                <Link href={`/studios/edit/${studio.id}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-ink hover:bg-sand"><Pencil size={15} aria-hidden="true" /> Edit</Link>
                 <button type="button" onClick={() => void setAvailability(studio)} disabled={busyId === studio.id} className="inline-flex min-h-10 items-center rounded-full border border-line px-3.5 text-sm font-semibold text-muted hover:bg-sand disabled:opacity-50">{busyId === studio.id ? "Saving…" : studio.isAvailable ? "Hide" : "Publish"}</button>
+                <button type="button" onClick={() => setDeleteTarget(studio)} disabled={busyId === studio.id} className="inline-flex min-h-10 items-center rounded-full border border-red-200 px-3.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>
               </div>
             </CardContent>
           </Card>
         ))}</div> : null}
       </div>
+      <Dialog
+        open={Boolean(deleteTarget)}
+        title="Delete this studio listing?"
+        description="This permanently removes the listing. You cannot restore it after deletion."
+        onClose={() => setDeleteTarget(null)}
+      >
+        <div className="flex justify-end gap-3">
+          <button type="button" onClick={() => setDeleteTarget(null)} className="min-h-10 rounded-full border border-line px-4 text-sm font-semibold text-ink hover:bg-sand">Keep listing</button>
+          <button type="button" onClick={() => void deleteStudio()} disabled={!deleteTarget || busyId === deleteTarget.id} className="min-h-10 rounded-full bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-50">{deleteTarget && busyId === deleteTarget.id ? "Deleting…" : "Delete permanently"}</button>
+        </div>
+      </Dialog>
     </section>
   );
 }

@@ -1,7 +1,7 @@
 const apiOrigin = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
-export async function proxyHostStudioRequest(request: Request, path = "") {
-  const target = new URL(`/api/host/studios${path}`, apiOrigin);
+export async function proxyApiRequest(request: Request, targetPath: string) {
+  const target = new URL(targetPath, apiOrigin);
   const headers = new Headers();
   for (const name of ["cookie", "content-type", "accept"]) {
     const value = request.headers.get(name);

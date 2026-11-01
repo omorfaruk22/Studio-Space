@@ -114,6 +114,8 @@ function serializeStudio(studio: {
   amenities: string[];
   overview: string;
   isAvailable: boolean;
+  ownerName: string;
+  ownerEmail: string;
   createdAt?: Date;
   updatedAt?: Date;
 }) {
@@ -130,6 +132,8 @@ function serializeStudio(studio: {
     amenities: studio.amenities ?? [],
     overview: studio.overview,
     isAvailable: studio.isAvailable,
+    ownerName: studio.ownerName,
+    ownerEmail: studio.ownerEmail,
     createdAt: studio.createdAt?.toISOString(),
     updatedAt: studio.updatedAt?.toISOString(),
   };
@@ -293,17 +297,13 @@ hostStudiosRouter.delete("/host/studios/:id", async (request, response, next) =>
     }
 
     const session = response.locals.authSession as { user: { id: string } };
-    const studio = await Studio.findOneAndUpdate(
-      { _id: request.params.id, ownerId: session.user.id },
-      { $set: { isAvailable: false } },
-      { new: true, runValidators: true },
-    ).lean();
+    const studio = await Studio.findOneAndDelete({ _id: request.params.id, ownerId: session.user.id });
 
     if (!studio) {
       response.status(404).json({ status: "error", message: "This studio could not be found." });
       return;
     }
-    response.json({ studio: serializeStudio(studio) });
+    response.json({ message: "Studio listing deleted." });
   } catch (error) {
     next(error);
   }

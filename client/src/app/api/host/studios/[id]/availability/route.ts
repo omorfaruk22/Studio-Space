@@ -1,4 +1,4 @@
-import { proxyHostStudioRequest } from "@/lib/host-studio-proxy";
+import { proxyApiRequest } from "@/lib/api-proxy";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -7,5 +7,5 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (!/^[a-f\d]{24}$/i.test(id)) {
     return Response.json({ status: "error", message: "Invalid studio ID." }, { status: 400 });
   }
-  return proxyHostStudioRequest(request, `/${encodeURIComponent(id)}/availability`);
+  return proxyApiRequest(request, `/api/host/studios/${encodeURIComponent(id)}/availability`);
 }

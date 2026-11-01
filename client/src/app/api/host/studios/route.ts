@@ -1,4 +1,4 @@
-import { proxyHostStudioRequest } from "@/lib/host-studio-proxy";
+import { proxyApiRequest } from "@/lib/api-proxy";
 
-export const GET = (request: Request) => proxyHostStudioRequest(request);
-export const POST = (request: Request) => proxyHostStudioRequest(request);
+export const GET = (request: Request) => proxyApiRequest(request, "/api/host/studios");
+export const POST = (request: Request) => proxyApiRequest(request, "/api/host/studios");

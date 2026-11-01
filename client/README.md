@@ -14,6 +14,8 @@ The frontend runs at `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` in `.env
 
 Email/password authentication is configured in the server. To enable Google login, configure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `server/.env.local` and set `BETTER_AUTH_URL` to the frontend origin. The Google redirect URI is `${BETTER_AUTH_URL}/api/auth/callback/google`.
 
+Hosts can upload JPEG, PNG, or WebP cover and gallery images up to 8 MB each. Configure `IMGBB_API_KEY` in the server environment to enable uploads; image hosting credentials stay on the server.
+
 ## Scripts
 
 - `npm run dev` — start the local development server.

@@ -17,4 +17,5 @@ export const env = {
   betterAuthUrl: process.env.BETTER_AUTH_URL ?? `http://localhost:${port}`,
   googleClientId: process.env.GOOGLE_CLIENT_ID,
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  imgbbApiKey: process.env.IMGBB_API_KEY,
 };

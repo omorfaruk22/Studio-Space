@@ -11,14 +11,30 @@ import { studioCategoryLabels } from "@/lib/studio-types";
 
 const categories: StudioCategory[] = ["photo", "sound-stage", "podcast", "music", "art"];
 
-type StudioFormProps = { studioId?: string };
+type StudioFormProps = { studioId?: string; hostName: string; hostEmail: string };
 type StudioResponse = { studio?: HostStudio; message?: string };
 
 function lines(value: FormDataEntryValue | null): string[] {
   return typeof value === "string" ? value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean) : [];
 }
 
-export function StudioForm({ studioId }: StudioFormProps) {
+async function uploadStudioImage(file: File): Promise<string> {
+  if (file.size > 8 * 1024 * 1024) throw new Error("Each image must be 8 MB or smaller.");
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    throw new Error("Choose a JPEG, PNG, or WebP image.");
+  }
+  const response = await fetch("/api/uploads/images", {
+    method: "POST",
+    headers: { "content-type": file.type },
+    credentials: "same-origin",
+    body: file,
+  });
+  const result = (await response.json()) as { url?: string; message?: string };
+  if (!response.ok || !result.url) throw new Error(result.message || "Could not upload this image.");
+  return result.url;
+}
+
+export function StudioForm({ studioId, hostName, hostEmail }: StudioFormProps) {
   const router = useRouter();
   const [studio, setStudio] = useState<HostStudio | null>(null);
   const [loading, setLoading] = useState(Boolean(studioId));
@@ -56,6 +72,21 @@ export function StudioForm({ studioId }: StudioFormProps) {
     setError("");
     setSubmitting(true);
     const form = new FormData(event.currentTarget);
+    const coverFileValue = form.get("coverFile");
+    const coverFile = coverFileValue instanceof File && coverFileValue.size > 0 ? coverFileValue : undefined;
+    const galleryFiles = form.getAll("galleryFiles").filter((value): value is File => value instanceof File && value.size > 0);
+    const coverUrl = String(form.get("image") ?? "").trim();
+    if (!coverFile && !coverUrl) {
+      setError("Add a cover image URL or upload a cover image.");
+      setSubmitting(false);
+      return;
+    }
+    const galleryUrls = lines(form.get("images"));
+    if (galleryUrls.length + galleryFiles.length > 10) {
+      setError("Use no more than 10 gallery images in total.");
+      setSubmitting(false);
+      return;
+    }
     const payload = {
       title: form.get("title"),
       category: form.get("category"),
@@ -63,13 +94,15 @@ export function StudioForm({ studioId }: StudioFormProps) {
       securityDeposit: Number(form.get("securityDeposit")),
       maxCapacity: Number(form.get("maxCapacity")),
       location: form.get("location"),
-      image: form.get("image"),
-      images: lines(form.get("images")),
+      image: coverUrl,
+      images: galleryUrls,
       amenities: lines(form.get("amenities")),
       overview: form.get("overview"),
     };
 
     try {
+      if (coverFile) payload.image = await uploadStudioImage(coverFile);
+      if (galleryFiles.length > 0) payload.images = [...galleryUrls, ...await Promise.all(galleryFiles.map(uploadStudioImage))];
       const response = await fetch(studioId ? `/api/host/studios/${studioId}` : "/api/host/studios", {
         method: studioId ? "PATCH" : "POST",
         headers: { "content-type": "application/json" },
@@ -120,22 +153,40 @@ export function StudioForm({ studioId }: StudioFormProps) {
         </FormField>
       </div>
 
-      <FormField label="Cover image URL" htmlFor="image" required hint="Use a publicly accessible HTTP or HTTPS image URL.">
-        <Input id="image" name="image" type="url" required defaultValue={studio?.image ?? ""} placeholder="https://example.com/studio.jpg" />
-      </FormField>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <FormField label="Cover image URL" htmlFor="image" hint="Paste a public image URL, or choose an image file on the right.">
+          <Input id="image" name="image" type="url" defaultValue={studio?.image ?? ""} placeholder="https://example.com/studio.jpg" />
+        </FormField>
+        <FormField label="Upload cover image" htmlFor="coverFile" hint="JPEG, PNG, or WebP. Maximum 8 MB.">
+          <Input id="coverFile" name="coverFile" type="file" accept="image/jpeg,image/png,image/webp" className="pt-3" />
+        </FormField>
+      </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <FormField label="Gallery image URLs" htmlFor="images" hint="Optional. Add one image URL per line, up to 10.">
           <Textarea id="images" name="images" defaultValue={studio?.images.join("\n") ?? ""} placeholder="https://example.com/room-2.jpg" />
         </FormField>
-        <FormField label="Amenities" htmlFor="amenities" hint="Optional. Add one amenity per line, up to 20.">
-          <Textarea id="amenities" name="amenities" defaultValue={studio?.amenities.join("\n") ?? ""} placeholder={"Natural light\nSoundproofing\nWi-Fi"} />
+        <FormField label="Upload gallery images" htmlFor="galleryFiles" hint="Optional. Select multiple JPEG, PNG, or WebP images, up to 8 MB each.">
+          <Input id="galleryFiles" name="galleryFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple className="pt-3" />
         </FormField>
       </div>
+
+      <FormField label="Amenities" htmlFor="amenities" hint="Optional. Add one amenity per line, up to 20.">
+        <Textarea id="amenities" name="amenities" defaultValue={studio?.amenities.join("\n") ?? ""} placeholder={"Natural light\nSoundproofing\nWi-Fi"} />
+      </FormField>
 
       <FormField label="About this studio" htmlFor="overview" required hint="Describe the space, equipment, and what creators can make here.">
         <Textarea id="overview" name="overview" required maxLength={5000} defaultValue={studio?.overview ?? ""} placeholder="Tell creators what makes this space a good fit for their project." />
       </FormField>
+
+      <div className="grid gap-5 border-t border-line pt-5 sm:grid-cols-2">
+        <FormField label="Host name" htmlFor="hostName" hint="This is taken from your account and cannot be changed here.">
+          <Input id="hostName" value={hostName} readOnly className="bg-sand/70" />
+        </FormField>
+        <FormField label="Host email" htmlFor="hostEmail" hint="This is taken from your account and cannot be changed here.">
+          <Input id="hostEmail" type="email" value={hostEmail} readOnly className="bg-sand/70" />
+        </FormField>
+      </div>
 
       <div className="flex flex-col-reverse gap-3 border-t border-line pt-5 sm:flex-row sm:justify-end">
         <Button type="button" variant="outline" onClick={() => router.push("/dashboard")}>Cancel</Button>

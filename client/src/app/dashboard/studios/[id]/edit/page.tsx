@@ -17,7 +17,7 @@ export default async function EditStudioPage({ params }: EditStudioPageProps) {
       <h1 className="mt-3 font-serif text-4xl tracking-tight text-ink sm:text-5xl">Edit studio</h1>
       <p className="mt-4 max-w-2xl text-base leading-7 text-muted">Update the details creators see when they explore your space.</p>
       <section className="mt-8 rounded-3xl border border-line bg-white p-5 shadow-card sm:p-8">
-        <StudioForm studioId={id} />
+        <StudioForm studioId={id} hostName={session.user.name} hostEmail={session.user.email} />
       </section>
     </main>
   );
