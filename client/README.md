@@ -2,6 +2,15 @@
 
 The StudioSpace web application built with Next.js App Router, TypeScript, and Tailwind CSS.
 
+## Project summary
+
+- **Website:** StudioSpace — [https://studio-space-phi.vercel.app](https://studio-space-phi.vercel.app).
+- **Client stack:** Next.js App Router, React, TypeScript, Tailwind CSS, and Sonner notifications.
+- **API and data:** Express, Better Auth, MongoDB Atlas, and Mongoose at [https://studio-space.onrender.com](https://studio-space.onrender.com).
+- **Main features:** Google/email authentication, studio discovery and host CRUD, image uploads, bookings, newsletter sign-up, and light/dark themes.
+- **Local setup:** copy `.env.example` to `.env.local`, set `NEXT_PUBLIC_API_URL`, run `npm ci`, then `npm run dev` from this folder.
+- **Examiner test credentials:** no shared production account or password is published in the repository. Create an account at `/register`; use a separate host account and a disposable listing to review host and booking flows. A dedicated shared account should be supplied privately by the project owner if required.
+
 ## Setup
 
 ```powershell

@@ -53,6 +53,10 @@ Confirmation checks run in a MongoDB transaction and update a per-studio revisio
 
 `GET /api/health` returns the API status, uptime, and Mongoose connection state. A missing or unavailable database is reported as `disconnected`; it does not prevent the HTTP server from starting during local setup.
 
+## Newsletter
+
+- `POST /api/newsletter` accepts `{ "email": "name@example.com" }`, normalizes the address, and stores one subscription per unique email in MongoDB. Duplicate sign-ups return the same accepted response. A hidden honeypot field filters basic automated form submissions.
+
 ## Scripts
 
 - `npm run dev` — watch and run the TypeScript server.

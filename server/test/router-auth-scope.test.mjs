@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { app } from "../dist/app.js";
 import { confirmedBookingOverlapRange } from "../dist/lib/booking-overlap.js";
+import { normalizeNewsletterEmail } from "../dist/lib/newsletter.js";
 
 let server;
 let baseUrl;
@@ -34,9 +35,31 @@ test("booking and host listing routes still require authentication", async () =>
   }
 });
 
+test("newsletter route is public, validates email, and quietly accepts honeypot entries", async () => {
+  const invalid = await fetch(`${baseUrl}/api/newsletter`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "not-an-email" }),
+  });
+  assert.equal(invalid.status, 400);
+
+  const bot = await fetch(`${baseUrl}/api/newsletter`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "bot@example.com", website: "filled-by-a-bot" }),
+  });
+  assert.equal(bot.status, 202);
+});
+
 test("confirmed booking overlap query excludes adjacent slots and catches intersecting slots", () => {
   assert.deepEqual(confirmedBookingOverlapRange("10:00", "11:00"), {
     startTime: { $lt: "11:00" },
     endTime: { $gt: "10:00" },
   });
+});
+
+test("newsletter emails are normalized and malformed addresses are rejected", () => {
+  assert.equal(normalizeNewsletterEmail("  Creator@Example.com  "), "creator@example.com");
+  assert.equal(normalizeNewsletterEmail("not-an-email"), null);
+  assert.equal(normalizeNewsletterEmail("x".repeat(250) + "@example.com"), null);
 });

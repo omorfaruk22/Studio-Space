@@ -1,5 +1,9 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
 import { Aperture, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { popularCategories, primaryNavigation, siteName } from "@/lib/site-config";
 import { Input } from "@/components/ui/input";
 
@@ -9,6 +13,30 @@ const socialLinks = [
 ] as const;
 
 export function SiteFooter() {
+  const [submitting, setSubmitting] = useState(false);
+
+  async function subscribe(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const values = new FormData(form);
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: values.get("email"), website: values.get("website") }),
+      });
+      const result = await response.json() as { message?: string };
+      if (!response.ok) throw new Error(result.message || "Could not save your subscription.");
+      toast.success(result.message || "Thanks for joining the StudioSpace updates list.");
+      form.reset();
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Could not connect to StudioSpace.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <footer id="site-footer" className="mt-auto bg-forest text-white">
       <div className="mx-auto max-w-page px-5 pb-8 pt-14 sm:px-8 sm:pt-16 xl:px-12">
@@ -51,15 +79,17 @@ export function SiteFooter() {
 
           <div className="max-w-sm">
             <h2 className="font-serif text-2xl">Notes for makers</h2>
-            <p className="mt-2 text-sm leading-6 text-white/70">Studio stories and useful ideas, delivered occasionally.</p>
-            <div className="mt-4 flex gap-2">
+            <p className="mt-2 text-sm leading-6 text-white/70">Join the list for occasional StudioSpace stories and useful ideas.</p>
+            <form onSubmit={subscribe} aria-busy={submitting} className="mt-4 flex gap-2">
               <label htmlFor="footer-email" className="sr-only">Email address for StudioSpace updates</label>
-              <Input id="footer-email" type="email" autoComplete="email" placeholder="Your email address" className="min-w-0 border-white/20 bg-white/10 text-white placeholder:text-white/45 focus:border-white focus:ring-white/20" />
-              <button type="button" disabled aria-label="Newsletter sign-up will be available soon" title="Newsletter sign-up will be available soon" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/15 text-white/50 disabled:cursor-not-allowed">
+              <Input id="footer-email" name="email" type="email" autoComplete="email" required maxLength={254} placeholder="Your email address" className="min-w-0 border-white/20 bg-white/10 text-white placeholder:text-white/45 focus:border-white focus:ring-white/20" />
+              <label htmlFor="footer-website" className="sr-only">Leave this field blank</label>
+              <input id="footer-website" name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[10000px] size-px opacity-0" />
+              <button type="submit" disabled={submitting} aria-label={submitting ? "Joining updates list" : "Join StudioSpace updates"} className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/15 text-white transition hover:bg-white/25 disabled:cursor-wait disabled:opacity-50">
                 <ArrowRight size={18} aria-hidden="true" />
               </button>
-            </div>
-            <p className="mt-2 text-xs text-white/45">Email updates will be available when the newsletter service is connected.</p>
+            </form>
+            <p className="mt-2 text-xs text-white/45">We use your email to manage your StudioSpace updates subscription.</p>
           </div>
         </div>
 
