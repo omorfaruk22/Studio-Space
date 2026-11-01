@@ -12,6 +12,7 @@ import { healthRouter } from "./routes/health.js";
 import { hostStudiosRouter } from "./routes/host-studios.js";
 import { imageUploadsRouter } from "./routes/image-uploads.js";
 import { newsletterRouter } from "./routes/newsletter.js";
+import { savedStudiosRouter } from "./routes/saved-studios.js";
 import { studioDetailsRouter } from "./routes/studio-details.js";
 import { studiosRouter } from "./routes/studios.js";
 
@@ -45,6 +46,7 @@ app.use("/api", studiosRouter);
 app.use("/api", hostStudiosRouter);
 app.use("/api", imageUploadsRouter);
 app.use("/api", newsletterRouter);
+app.use("/api", savedStudiosRouter);
 app.use("/api", studioDetailsRouter);
 app.use((_request, response) => {
   response.status(404).json({ status: "error", message: "Route not found." });

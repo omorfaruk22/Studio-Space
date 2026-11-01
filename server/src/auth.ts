@@ -1,6 +1,7 @@
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
+import { jwt } from "better-auth/plugins";
 import { mongoClient } from "./config/database.js";
 import { env } from "./config/env.js";
 
@@ -33,7 +34,15 @@ export const auth = betterAuth({
     minPasswordLength: 6,
     maxPasswordLength: 128,
   },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 300,
+      strategy: "jwt",
+    },
+  },
   ...(googleProvider ? { socialProviders: googleProvider } : {}),
+  plugins: [jwt({ sessionCookieCache: true })],
   advanced: {
     defaultCookieAttributes: {
       httpOnly: true,
