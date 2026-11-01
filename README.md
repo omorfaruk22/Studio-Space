@@ -1,49 +1,63 @@
 # StudioSpace
 
-StudioSpace is a peer-to-peer marketplace for finding and sharing creative workspaces. This repository contains separate frontend and backend applications in one repository.
+StudioSpace is a peer-to-peer marketplace for finding and sharing creative workspaces. The repository contains a Next.js client and an Express API in one monorepo.
 
-## Phase 1 structure
+## Live application
 
-- `client/` — Next.js App Router, TypeScript, and Tailwind CSS frontend.
-- `server/` — Express REST API with TypeScript, Mongoose, centralized errors, and a health endpoint.
+- Website: [studio-space-phi.vercel.app](https://studio-space-phi.vercel.app)
+- API: [studio-space.onrender.com](https://studio-space.onrender.com)
+- API health and database status: [studio-space.onrender.com/api/health](https://studio-space.onrender.com/api/health)
 
-## Prerequisites
+## Features
 
-- Node.js 20.9 or later (Node.js 24 is supported by the current setup).
-- npm.
-- A MongoDB Atlas connection string for database connectivity.
+- Responsive home page and studio discovery with search, location, category, price, and sort filters.
+- Email/password and Google sign-in, session-aware pages, and protected host/customer areas.
+- Studio detail pages, image galleries, and host listing create/edit/availability/delete controls.
+- Booking requests, customer cancellation, host confirm/decline, and protection against overlapping confirmed bookings.
+- Light/dark theme toggle and loading, empty, and error states.
+
+## Technology
+
+- `client/` — Next.js App Router, React, TypeScript, and Tailwind CSS.
+- `server/` — Express, TypeScript, Better Auth, MongoDB, and Mongoose.
+- Deployment — Vercel (client), Render (API), and MongoDB Atlas (database).
 
 ## Run locally
 
-Open two terminals from the repository root.
+Use Node.js 20.9 or later and npm. Open two terminals from the repository root.
 
 ```powershell
-# Terminal 1
+# Terminal 1: frontend
 cd client
 Copy-Item .env.example .env.local
-npm install
+npm ci
 npm run dev
 ```
 
 ```powershell
-# Terminal 2
+# Terminal 2: API
 cd server
 Copy-Item .env.example .env
-# Set MONGODB_URI in server/.env before expecting a database connection.
-npm install
+# Fill server/.env with your local MongoDB URI and a private Better Auth secret.
+npm ci
 npm run dev
 ```
 
-The frontend runs at `http://localhost:3000`. The API runs at `http://localhost:4000`; its health endpoint is `http://localhost:4000/api/health`.
+The client is at `http://localhost:3000`; the API is at `http://localhost:4000`. Set `NEXT_PUBLIC_API_URL=http://localhost:4000` in `client/.env.local`. Configure `CLIENT_ORIGIN` and `BETTER_AUTH_URL` as `http://localhost:3000` in `server/.env`. Google login additionally requires a Google OAuth Web Client ID and secret. See the application READMEs and [deployment guide](docs/deployment.md) for details.
 
-## Environment variables
+Never commit `.env` files, OAuth secrets, database credentials, or API keys. The checked-in `.env.example` files contain placeholders only.
 
-See `client/.env.example` and `server/.env.example`. Never commit real credentials. The API can start without a MongoDB URI for local route development, but the health response will report the database as disconnected until a valid URI is configured.
+## Build and check
 
-## Current phase
+```powershell
+cd client
+npm run lint
+npm run build
 
-The application includes the responsive StudioSpace UI, email/Google authentication, database-backed studio discovery, studio detail pages, host studio listing management, booking requests, host confirmation and decline actions, confirmed-booking overlap protection, and a persistent light/dark theme toggle.
+cd ..\server
+npm run typecheck
+npm run build
+npm test
+```
 
-## Deployment
-
-See [docs/deployment.md](docs/deployment.md) for the Vercel, Render, MongoDB Atlas, and Google OAuth setup. The root [render.yaml](render.yaml) defines the Express API service.
+For deployed endpoint checks and the manual release checklist, see [Phase 10 verification](docs/phase-10-verification.md). Deployment steps are in [docs/deployment.md](docs/deployment.md).

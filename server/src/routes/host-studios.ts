@@ -143,7 +143,8 @@ function validId(id: string): boolean {
   return /^[a-f\d]{24}$/i.test(id);
 }
 
-hostStudiosRouter.use(requireAuth);
+// This router shares the /api mount with public studio routes.
+hostStudiosRouter.use("/host/studios", requireAuth);
 
 hostStudiosRouter.get("/host/studios", async (_request, response, next) => {
   try {

@@ -12,6 +12,8 @@ npm run dev
 
 The frontend runs at `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` in `.env.local` to the Express API origin (default: `http://localhost:4000`). Browser authentication requests use the same-origin `/api/auth/*` route, which proxies to Express so HTTPOnly cookies remain available to protected Next.js pages.
 
+The production frontend is deployed at [https://studio-space-phi.vercel.app](https://studio-space-phi.vercel.app), with its API at [https://studio-space.onrender.com](https://studio-space.onrender.com). See the root README and [deployment guide](../docs/deployment.md) for setup and release verification.
+
 Email/password authentication is configured in the server. To enable Google login, configure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `server/.env.local` and set `BETTER_AUTH_URL` to the frontend origin. The Google redirect URI is `${BETTER_AUTH_URL}/api/auth/callback/google`.
 
 Hosts can upload JPEG, PNG, or WebP cover and gallery images up to 8 MB each. Configure `IMGBB_API_KEY` in the server environment to enable uploads; image hosting credentials stay on the server.

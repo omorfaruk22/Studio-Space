@@ -69,7 +69,11 @@ function isRealDate(value: string): boolean {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
-bookingsRouter.use(requireAuth);
+// This router is mounted at /api alongside public routers, so keep auth scoped
+// to the booking endpoints instead of intercepting unrelated public routes.
+bookingsRouter.use("/bookings", requireAuth);
+bookingsRouter.use("/my-bookings", requireAuth);
+bookingsRouter.use("/host/bookings", requireAuth);
 
 bookingsRouter.post("/bookings", async (request, response, next) => {
   try {

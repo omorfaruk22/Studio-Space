@@ -58,4 +58,6 @@ Confirmation checks run in a MongoDB transaction and update a per-studio revisio
 - `npm run dev` — watch and run the TypeScript server.
 - `npm run build` — compile TypeScript into `dist/`.
 - `npm run typecheck` — check types without writing build output.
+- `npm test` — build the API and run route/auth regression tests with Node's test runner.
 - `npm start` — run the compiled server.
+- `npm run smoke` — check the client/API health, public studio routes, and anonymous access restrictions. Set `CLIENT_BASE_URL`, `API_BASE_URL`, `REQUIRE_DATABASE=true`, and `REQUIRE_GOOGLE_AUTH=true` when running against production; see [Phase 10 verification](../docs/phase-10-verification.md).
