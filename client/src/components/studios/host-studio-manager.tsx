@@ -1,0 +1,110 @@
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { ArrowRight, Eye, Pencil, Plus, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+import { Card, CardContent } from "@/components/ui/card";
+import type { HostStudio } from "@/lib/studio-types";
+import { studioCategoryLabels } from "@/lib/studio-types";
+
+type HostStudiosResponse = { studios?: HostStudio[]; message?: string };
+
+async function fetchHostStudios(): Promise<HostStudio[]> {
+  const response = await fetch("/api/host/studios", { cache: "no-store", credentials: "same-origin" });
+  const result = (await response.json()) as HostStudiosResponse;
+  if (!response.ok || !Array.isArray(result.studios)) {
+    throw new Error(result.message || "Could not load your studio listings.");
+  }
+  return result.studios;
+}
+
+export function HostStudioManager() {
+  const [studios, setStudios] = useState<HostStudio[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [busyId, setBusyId] = useState("");
+
+  const loadStudios = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      setStudios(await fetchHostStudios());
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not load your studio listings.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void fetchHostStudios()
+      .then((listings) => { if (active) setStudios(listings); })
+      .catch((cause: unknown) => {
+        if (active) setError(cause instanceof Error ? cause.message : "Could not load your studio listings.");
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  async function setAvailability(studio: HostStudio) {
+    setBusyId(studio.id);
+    try {
+      const response = studio.isAvailable
+        ? await fetch(`/api/host/studios/${studio.id}`, { method: "DELETE", credentials: "same-origin" })
+        : await fetch(`/api/host/studios/${studio.id}/availability`, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ isAvailable: true }),
+          });
+      const result = (await response.json()) as { studio?: HostStudio; message?: string };
+      if (!response.ok || !result.studio) throw new Error(result.message || "Could not update this listing.");
+      setStudios((current) => current.map((item) => item.id === studio.id ? result.studio! : item));
+      toast.success(result.studio.isAvailable ? "Studio listing is live." : "Studio listing is hidden from search.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Could not update this listing.");
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  return (
+    <section className="mt-12" aria-labelledby="your-listings-heading">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">Host tools</p>
+          <h2 id="your-listings-heading" className="mt-2 font-serif text-3xl tracking-tight text-ink">Your studio listings</h2>
+          <p className="mt-2 text-sm leading-6 text-muted">Create, update, and control which spaces appear in search.</p>
+        </div>
+        <Link href="/add-studio" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"><Plus size={17} aria-hidden="true" /> Add studio</Link>
+      </div>
+
+      <div className="mt-5" aria-live="polite">
+        {loading ? <p className="rounded-2xl border border-line bg-white px-5 py-8 text-sm text-muted">Loading your listings…</p> : null}
+        {!loading && error ? <div className="rounded-2xl border border-line bg-white px-5 py-8 text-center"><p className="text-sm text-muted" role="alert">{error}</p><button type="button" onClick={() => void loadStudios()} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-strong"><RefreshCw size={15} aria-hidden="true" />Try again</button></div> : null}
+        {!loading && !error && studios.length === 0 ? <Card><CardContent className="px-6 py-9 text-center sm:py-12"><p className="font-serif text-2xl text-ink">Your first space starts here.</p><p className="mt-2 text-sm text-muted">Create a listing to help creators find your studio.</p><Link href="/add-studio" className="mt-5 inline-flex items-center gap-2 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-strong">Create a listing <ArrowRight size={15} aria-hidden="true" /></Link></CardContent></Card> : null}
+        {!loading && !error && studios.length > 0 ? <div className="grid gap-4 lg:grid-cols-2">{studios.map((studio) => (
+          <Card key={studio.id}>
+            <CardContent className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="truncate font-serif text-xl text-ink">{studio.title}</h3>
+                  <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${studio.isAvailable ? "bg-emerald-50 text-emerald-800" : "bg-sand text-muted"}`}>{studio.isAvailable ? "Live" : "Hidden"}</span>
+                </div>
+                <p className="mt-2 text-sm text-muted">{studioCategoryLabels[studio.category]} · {studio.location}</p>
+                <p className="mt-1 text-sm font-semibold text-ink">${studio.hourlyRate} / hour</p>
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-2">
+                {studio.isAvailable ? <Link href={`/studios/${studio.id}`} aria-label={`View ${studio.title}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-ink hover:bg-sand"><Eye size={15} aria-hidden="true" /> View</Link> : null}
+                <Link href={`/dashboard/studios/${studio.id}/edit`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-ink hover:bg-sand"><Pencil size={15} aria-hidden="true" /> Edit</Link>
+                <button type="button" onClick={() => void setAvailability(studio)} disabled={busyId === studio.id} className="inline-flex min-h-10 items-center rounded-full border border-line px-3.5 text-sm font-semibold text-muted hover:bg-sand disabled:opacity-50">{busyId === studio.id ? "Saving…" : studio.isAvailable ? "Hide" : "Publish"}</button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}</div> : null}
+      </div>
+    </section>
+  );
+}

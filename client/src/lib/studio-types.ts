@@ -11,6 +11,16 @@ export type FeaturedStudio = {
   createdAt?: string;
 };
 
+export type HostStudio = FeaturedStudio & {
+  securityDeposit: number;
+  maxCapacity: number;
+  images: string[];
+  amenities: string[];
+  overview: string;
+  isAvailable: boolean;
+  updatedAt?: string;
+};
+
 export const studioCategoryLabels: Record<StudioCategory, string> = {
   photo: "Photo studio",
   "sound-stage": "Sound stage",

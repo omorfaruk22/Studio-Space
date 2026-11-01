@@ -22,6 +22,17 @@ Set a private `BETTER_AUTH_SECRET` of at least 32 characters and `BETTER_AUTH_UR
 - `GET /api/studios` returns available studios. Optional query parameters are `category`, `location`, `search`, `minPrice`, `maxPrice`, and `sort` (`newest`, `price`, or `rating`).
 - `GET /api/studios/:id` returns a studio's public details. Invalid MongoDB IDs receive `400`; unavailable or missing studios receive `404`.
 
+## Host studio management
+
+All host studio routes require a signed-in session and scope records to the authenticated owner:
+
+- `GET /api/host/studios` lists the current host's listings.
+- `POST /api/host/studios` creates a listing using the signed-in account as its owner.
+- `GET /api/host/studios/:id` returns one owned listing, including hidden listings.
+- `PATCH /api/host/studios/:id` updates listing details.
+- `DELETE /api/host/studios/:id` hides a listing from public search without deleting its data.
+- `PATCH /api/host/studios/:id/availability` accepts `{ "isAvailable": true }` to publish a hidden listing again.
+
 ## Health check
 
 `GET /api/health` returns the API status, uptime, and Mongoose connection state. A missing or unavailable database is reported as `disconnected`; it does not prevent the HTTP server from starting during local setup.

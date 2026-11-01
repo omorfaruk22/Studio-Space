@@ -1,0 +1,15 @@
+import { proxyHostStudioRequest } from "@/lib/host-studio-proxy";
+
+type RouteContext = { params: Promise<{ id: string }> };
+
+async function proxyById(request: Request, context: RouteContext) {
+  const { id } = await context.params;
+  if (!/^[a-f\d]{24}$/i.test(id)) {
+    return Response.json({ status: "error", message: "Invalid studio ID." }, { status: 400 });
+  }
+  return proxyHostStudioRequest(request, `/${encodeURIComponent(id)}`);
+}
+
+export const GET = proxyById;
+export const PATCH = proxyById;
+export const DELETE = proxyById;
