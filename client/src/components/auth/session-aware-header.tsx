@@ -21,7 +21,7 @@ export function SessionAwareHeader() {
   }
 
   const user = data?.user
-    ? { name: data.user.name, email: data.user.email, onLogout: logout }
+    ? { name: data.user.name, email: data.user.email, image: data.user.image, onLogout: logout }
     : null;
 
   return <SiteHeader user={user} />;

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   Aperture,
   CalendarDays,
@@ -8,7 +9,6 @@ import {
   LogOut,
   Menu,
   Plus,
-  UserRound,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -21,6 +21,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export type HeaderUser = {
   name: string;
   email: string;
+  image?: string | null;
   onLogout: () => void;
 };
 
@@ -43,6 +44,16 @@ function initials(name: string) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("");
+}
+
+function UserAvatar({ user }: { user: HeaderUser }) {
+  return (
+    <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-sage text-xs font-bold text-forest" aria-hidden="true">
+      {user.image ? (
+        <Image src={user.image} alt="" width={32} height={32} unoptimized className="size-full object-cover" />
+      ) : initials(user.name)}
+    </span>
+  );
 }
 
 export function SiteHeader({ user = null }: SiteHeaderProps) {
@@ -133,7 +144,7 @@ export function SiteHeader({ user = null }: SiteHeaderProps) {
                   aria-haspopup="menu"
                   onClick={() => setProfileOpen((open) => !open)}
                 >
-                  <span className="grid size-8 place-items-center rounded-full bg-sage text-xs font-bold text-forest" aria-hidden="true">{initials(user.name)}</span>
+                  <UserAvatar user={user} />
                   <span className="max-w-24 truncate">{user.name.split(" ")[0]}</span>
                   <ChevronDown size={15} aria-hidden="true" />
                 </button>
@@ -185,7 +196,7 @@ export function SiteHeader({ user = null }: SiteHeaderProps) {
             <div className="mt-3 flex gap-2 border-t border-line pt-4">
               {user ? (
                 <>
-                  <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-line bg-white text-sm font-semibold text-ink"><UserRound size={16} aria-hidden="true" /> Account</Link>
+                  <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-line bg-white text-sm font-semibold text-ink"><UserAvatar user={user} /> Account</Link>
                   <button type="button" onClick={() => { setMobileOpen(false); user.onLogout(); }} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-forest text-sm font-semibold text-white"><LogOut size={16} aria-hidden="true" /> Log out</button>
                   <div className="mt-2 grid w-full grid-cols-2 gap-2 border-t border-line pt-3">
                     {accountLinks.slice(1).map(({ label, href }) => (
