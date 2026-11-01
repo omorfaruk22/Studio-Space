@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, MapPin, ShieldCheck, Star, UsersRound } from "lucide-react";
+import { Aperture, ArrowLeft, ArrowRight, Check, MapPin, Star, UsersRound } from "lucide-react";
 import { BookingDialogButton } from "@/components/bookings/booking-dialog-button";
 import { StudioGallery } from "@/components/studios/studio-gallery";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -56,7 +56,7 @@ function StudioContent({ studio, isAuthenticated }: { studio: StudioDetails; isA
             <div className="mt-5 flex items-center gap-4 rounded-3xl border border-line bg-white p-5">
               <span className="grid size-14 shrink-0 place-items-center rounded-full bg-forest font-serif text-xl text-white">{studio.host.name.trim().charAt(0).toUpperCase()}</span>
               <div><p className="font-semibold text-ink">{studio.host.name}</p><p className="mt-1 text-sm text-muted">StudioSpace host</p></div>
-              <ShieldCheck className="ml-auto text-brand-strong" size={22} aria-label="Host profile" />
+              <Aperture className="ml-auto text-brand-strong" size={22} aria-hidden="true" />
             </div>
           </section>
 

@@ -27,7 +27,7 @@ export function SiteFooter() {
         body: JSON.stringify({ email: values.get("email"), website: values.get("website") }),
       });
       const result = await response.json() as { message?: string };
-      if (!response.ok) throw new Error(result.message || "Could not save your subscription.");
+      if (!response.ok) throw new Error(result.message || "Could not save your interest.");
       toast.success(result.message || "Thanks for joining the StudioSpace updates list.");
       form.reset();
     } catch (cause) {
@@ -41,7 +41,7 @@ export function SiteFooter() {
     <footer id="site-footer" className="mt-auto bg-forest text-white">
       <div className="mx-auto max-w-page px-5 pb-8 pt-14 sm:px-8 sm:pt-16 xl:px-12">
         <div className="grid gap-12 border-b border-white/15 pb-12 md:grid-cols-2 xl:grid-cols-[1.3fr_.8fr_.9fr_1.2fr] xl:gap-10">
-          <div id="about" className="max-w-sm">
+          <div className="max-w-sm">
             <Link href="/" className="inline-flex items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
               <span className="grid size-10 place-items-center rounded-full bg-white/10 text-white"><Aperture size={21} aria-hidden="true" /></span>
               <span className="font-serif text-2xl font-semibold tracking-tight">{siteName}</span>
@@ -79,7 +79,7 @@ export function SiteFooter() {
 
           <div className="max-w-sm">
             <h2 className="font-serif text-2xl">Notes for makers</h2>
-            <p className="mt-2 text-sm leading-6 text-white/70">Join the list for occasional StudioSpace stories and useful ideas.</p>
+            <p className="mt-2 text-sm leading-6 text-white/70">Leave your email to register interest in future StudioSpace updates.</p>
             <form onSubmit={subscribe} aria-busy={submitting} className="mt-4 flex gap-2">
               <label htmlFor="footer-email" className="sr-only">Email address for StudioSpace updates</label>
               <Input id="footer-email" name="email" type="email" autoComplete="email" required maxLength={254} placeholder="Your email address" className="min-w-0 border-white/20 bg-white/10 text-white placeholder:text-white/45 focus:border-white focus:ring-white/20" />
@@ -89,7 +89,7 @@ export function SiteFooter() {
                 <ArrowRight size={18} aria-hidden="true" />
               </button>
             </form>
-            <p className="mt-2 text-xs text-white/45">We use your email to manage your StudioSpace updates subscription.</p>
+            <p className="mt-2 text-xs text-white/45">Your interest is saved in StudioSpace. Email updates are not sent yet.</p>
           </div>
         </div>
 

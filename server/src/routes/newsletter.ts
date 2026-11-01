@@ -6,7 +6,7 @@ import { NewsletterSubscription } from "../models/NewsletterSubscription.js";
 export const newsletterRouter = Router();
 
 const subscribedResponse = {
-  message: "Thanks for joining the StudioSpace updates list.",
+  message: "Thanks for your interest. Your email is saved; updates are not sent yet.",
 };
 
 newsletterRouter.post("/newsletter", async (request, response, next) => {

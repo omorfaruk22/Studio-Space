@@ -4,14 +4,14 @@ import {
   ArrowRight,
   AudioLines,
   BadgeCheck,
+  CalendarDays,
   Camera,
   Check,
+  ClipboardCheck,
   Clock3,
   Headphones,
-  HeartHandshake,
   Mic2,
   Palette,
-  ShieldCheck,
   Sparkles,
   UsersRound,
 } from "lucide-react";
@@ -35,9 +35,9 @@ const bookingSteps = [
 ];
 
 const hostBenefits = [
-  { title: "Verified profiles", detail: "Know who you are welcoming into your creative space.", icon: BadgeCheck },
-  { title: "Thoughtful protection", detail: "Clear booking details help hosts and creators plan with care.", icon: ShieldCheck },
-  { title: "A real support team", detail: "Get help when you need a hand with the details.", icon: HeartHandshake },
+  { title: "Compare the details", detail: "Review each listing’s rate, capacity, location, and stated amenities before you request a booking.", icon: ClipboardCheck },
+  { title: "The host confirms", detail: "A request stays pending until the host confirms it. StudioSpace does not collect payment.", icon: CalendarDays },
+  { title: "Plan for your session", detail: "Read the equipment and access details, then confirm anything important with the host before you book.", icon: BadgeCheck },
 ];
 
 export default function Home() {
@@ -87,9 +87,9 @@ export default function Home() {
       <section id="about" className="mx-auto max-w-page px-5 pb-16 sm:px-8 sm:pb-20 xl:px-12" aria-labelledby="support-heading">
         <div className="grid overflow-hidden rounded-[2rem] bg-forest text-white lg:grid-cols-[1.05fr_0.95fr]">
           <div className="px-7 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-14">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#efb99a]">Good work starts with trust</p>
-            <h2 id="support-heading" className="mt-4 max-w-xl font-serif text-3xl leading-tight tracking-tight sm:text-4xl">A little more support for the people who make things.</h2>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-white/70 sm:text-base">Creative work takes care, collaboration, and the right place to begin. We help hosts and creators feel at home from the first conversation.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#efb99a]">Good work starts with clear details</p>
+            <h2 id="support-heading" className="mt-4 max-w-xl font-serif text-3xl leading-tight tracking-tight sm:text-4xl">Plan your session with the host.</h2>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-white/70 sm:text-base">StudioSpace connects independent hosts and creators. Review the listing and booking status so both sides can agree on the practical details.</p>
             <ul className="mt-8 space-y-4">
               {hostBenefits.map(({ title, detail, icon: Icon }) => (
                 <li key={title} className="flex gap-3"><span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-white/10 text-[#efb99a]"><Icon size={18} aria-hidden="true" /></span><span><span className="block text-sm font-semibold">{title}</span><span className="mt-1 block text-sm leading-5 text-white/65">{detail}</span></span></li>

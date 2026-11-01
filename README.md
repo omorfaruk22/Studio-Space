@@ -14,8 +14,10 @@ StudioSpace is a peer-to-peer marketplace for finding and sharing creative works
 - Email/password and Google sign-in, session-aware pages, and protected host/customer areas.
 - Studio detail pages, image galleries, and host listing create/edit/availability/delete controls.
 - Booking requests, customer cancellation, host confirm/decline, and protection against overlapping confirmed bookings.
+- Saved studio wishlists and downloadable PDF summaries for confirmed bookings.
 - Light/dark theme toggle and loading, empty, and error states.
-- Newsletter sign-up persisted in MongoDB, with duplicate subscriptions handled safely.
+- Newsletter interest is persisted in MongoDB; email campaigns are not connected yet.
+- Terms and privacy pages describe the current demo behavior and its operational limits.
 
 ## Technology
 

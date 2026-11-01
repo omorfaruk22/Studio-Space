@@ -7,7 +7,7 @@ The StudioSpace web application built with Next.js App Router, TypeScript, and T
 - **Website:** StudioSpace — [https://studio-space-phi.vercel.app](https://studio-space-phi.vercel.app).
 - **Client stack:** Next.js App Router, React, TypeScript, Tailwind CSS, and Sonner notifications.
 - **API and data:** Express, Better Auth, MongoDB Atlas, and Mongoose at [https://studio-space.onrender.com](https://studio-space.onrender.com).
-- **Main features:** Google/email authentication, studio discovery and host CRUD, image uploads, bookings, newsletter sign-up, and light/dark themes.
+- **Main features:** Google/email authentication, studio discovery and host CRUD, image uploads, bookings, saved studios, confirmed-booking PDF summaries, newsletter interest sign-up, and light/dark themes.
 - **Local setup:** copy `.env.example` to `.env.local`, set `NEXT_PUBLIC_API_URL`, run `npm ci`, then `npm run dev` from this folder.
 - **Examiner test credentials:** no shared production account or password is published in the repository. Create an account at `/register`; use a separate host account and a disposable listing to review host and booking flows. A dedicated shared account should be supplied privately by the project owner if required.
 
@@ -40,4 +40,6 @@ The home page includes a three-slide hero, featured studios loaded from the API,
 
 Public studio data is fetched from the Express API at `NEXT_PUBLIC_API_URL`. When there are no studio records, the home page and discovery page show friendly empty states.
 
-Signed-in creators can request a studio booking from its details page and review or cancel pending requests at `/my-bookings`. Prices are calculated by the server from the current studio rate; this app does not collect payments.
+Signed-in creators can save studios, request a booking from its details page, and review or cancel pending requests at `/my-bookings`. Confirmed bookings can be downloaded as a PDF summary. Prices are calculated by the server from the current studio rate; this app does not collect payments.
+
+The footer interest form stores submitted addresses in MongoDB, but there is no mailing-list provider connected and no email updates are sent. The current project also does not provide identity verification, equipment inspections, liability coverage, or 24/7 support. Read the [Terms](src/app/terms/page.tsx) and [Privacy notes](src/app/privacy/page.tsx) for current behavior.

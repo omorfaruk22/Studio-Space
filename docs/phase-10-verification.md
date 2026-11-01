@@ -48,6 +48,13 @@ Use separate test accounts for a customer and a host. Do not add real passwords 
 - [ ] Create two requests for overlapping times on the same studio/date; confirm one, then verify confirming the overlapping request is rejected.
 - [ ] Verify the host cannot access or change another host's booking, and a customer cannot access another customer's booking.
 - [ ] Try a past date and an invalid time range; confirm the API rejects them.
+- [ ] Save and remove a studio from the wishlist; confirm the saved list survives a reload and is private to the signed-in account.
+- [ ] Download the PDF summary for a host-confirmed booking; confirm it contains the correct slot and price breakdown and does not imply payment was collected.
+
+### Footer and policies
+
+- [ ] Submit a valid email to the updates list; confirm the page says the email is saved and that campaigns are not sent yet.
+- [ ] Open the Terms and Privacy links from the footer.
 
 ### Deployment and responsive layout
 
