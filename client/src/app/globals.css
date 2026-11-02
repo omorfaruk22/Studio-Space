@@ -2,17 +2,17 @@
 
 :root {
   color-scheme: light;
-  --canvas: #f2f7f1;
-  --paper: #fbfdf9;
+  --canvas: #eaf3e8;
+  --paper: #f8fcf7;
   --ink: #18392d;
-  --muted: #61776b;
-  --line: #d8e6d9;
-  --sand: #e7f0e7;
+  --muted: #5e7568;
+  --line: #d1e2d4;
+  --sand: #e2eee1;
   --brand: #3b7753;
   --brand-strong: #316948;
   --forest: #204d38;
   --forest-strong: #173d2c;
-  --sage: #d9eadd;
+  --sage: #d4e8d5;
   --focus: #35734f;
 }
 
