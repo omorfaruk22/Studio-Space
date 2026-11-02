@@ -116,13 +116,13 @@ export function SiteHeader({ user = null }: SiteHeaderProps) {
 
   return (
     <header ref={headerRef} className="sticky top-0 z-50 border-b border-line/80 bg-canvas/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-[76px] max-w-page items-center justify-between gap-5 px-5 sm:px-8 xl:px-12">
+      <div className="mx-auto flex h-[76px] max-w-page items-center justify-between gap-3 px-4 sm:gap-5 sm:px-8 xl:px-12">
         <Link href="/" className="group inline-flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus">
           <span className="grid size-10 place-items-center rounded-full bg-forest text-white transition group-hover:bg-brand">
             <Aperture size={21} strokeWidth={1.8} aria-hidden="true" />
           </span>
           <span className="leading-tight">
-            <span className="block font-serif text-[1.35rem] font-semibold tracking-tight text-ink">StudioSpace</span>
+            <span className="block font-serif text-[1.15rem] font-semibold tracking-tight text-ink min-[380px]:text-[1.35rem]">StudioSpace</span>
             <span className="hidden text-[9px] font-bold uppercase tracking-[0.2em] text-muted sm:block">Room to create</span>
           </span>
         </Link>
@@ -176,7 +176,7 @@ export function SiteHeader({ user = null }: SiteHeaderProps) {
           )}
         </div>
 
-        <div className="flex items-center gap-2 lg:hidden">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 lg:hidden">
           <ThemeToggle />
           <button
             type="button"
@@ -192,17 +192,19 @@ export function SiteHeader({ user = null }: SiteHeaderProps) {
       </div>
 
       {mobileOpen ? (
-        <div id="mobile-navigation" className="border-t border-line bg-canvas px-5 py-4 shadow-card lg:hidden">
+        <div id="mobile-navigation" className="max-h-[calc(100dvh-76px)] overflow-y-auto overscroll-contain border-t border-line bg-canvas px-4 py-4 shadow-card sm:px-5 lg:hidden">
           <nav className="mx-auto flex max-w-page flex-col gap-1" aria-label="Mobile navigation">
             {renderNavLinks(true)}
-            <div className="mt-3 flex gap-2 border-t border-line pt-4">
+            <div className="mt-3 grid gap-3 border-t border-line pt-4">
               {user ? (
                 <>
-                  <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-line bg-white text-sm font-semibold text-ink"><UserAvatar user={user} /> Account</Link>
-                  <button type="button" onClick={() => { setMobileOpen(false); user.onLogout(); }} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-forest text-sm font-semibold text-white"><LogOut size={16} aria-hidden="true" /> Log out</button>
-                  <div className="mt-2 grid w-full grid-cols-2 gap-2 border-t border-line pt-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-full border border-line bg-white px-2 text-sm font-semibold text-ink"><UserAvatar user={user} /> Account</Link>
+                    <button type="button" onClick={() => { setMobileOpen(false); user.onLogout(); }} className="inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-full bg-forest px-2 text-sm font-semibold text-white"><LogOut size={16} aria-hidden="true" /> Log out</button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
                     {accountLinks.slice(1).map(({ label, href }) => (
-                      <Link key={href} href={href} onClick={() => setMobileOpen(false)} className="flex min-h-10 items-center justify-center rounded-xl bg-white px-2 text-center text-xs font-medium text-ink">{label}</Link>
+                      <Link key={href} href={href} onClick={() => setMobileOpen(false)} className="flex min-h-11 min-w-0 items-center justify-center rounded-xl bg-white px-3 py-2 text-center text-xs font-medium leading-4 text-ink">{label}</Link>
                     ))}
                   </div>
                 </>

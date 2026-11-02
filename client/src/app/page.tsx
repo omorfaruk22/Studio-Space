@@ -87,20 +87,20 @@ export default function Home() {
       <section id="about" className="mx-auto max-w-page px-5 pb-16 sm:px-8 sm:pb-20 xl:px-12" aria-labelledby="support-heading">
         <div className="grid overflow-hidden rounded-[2rem] bg-forest text-white lg:grid-cols-[1.05fr_0.95fr]">
           <div className="px-7 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-14">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#efb99a]">Good work starts with clear details</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#cfe5d2]">Good work starts with clear details</p>
             <h2 id="support-heading" className="mt-4 max-w-xl font-serif text-3xl leading-tight tracking-tight sm:text-4xl">Plan your session with the host.</h2>
             <p className="mt-5 max-w-xl text-sm leading-7 text-white/70 sm:text-base">StudioSpace connects independent hosts and creators. Review the listing and booking status so both sides can agree on the practical details.</p>
             <ul className="mt-8 space-y-4">
               {hostBenefits.map(({ title, detail, icon: Icon }) => (
-                <li key={title} className="flex gap-3"><span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-white/10 text-[#efb99a]"><Icon size={18} aria-hidden="true" /></span><span><span className="block text-sm font-semibold">{title}</span><span className="mt-1 block text-sm leading-5 text-white/65">{detail}</span></span></li>
+                <li key={title} className="flex gap-3"><span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-white/10 text-[#cfe5d2]"><Icon size={18} aria-hidden="true" /></span><span><span className="block text-sm font-semibold">{title}</span><span className="mt-1 block text-sm leading-5 text-white/65">{detail}</span></span></li>
               ))}
             </ul>
-            <Link href="/register" className="mt-9 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#e58b6d] px-6 text-sm font-semibold text-white transition hover:bg-[#d9694c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Join the community <ArrowRight size={16} aria-hidden="true" /></Link>
+            <Link href="/register" className="mt-9 inline-flex min-h-12 items-center gap-2 rounded-full bg-brand px-6 text-sm font-semibold text-white transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Join the community <ArrowRight size={16} aria-hidden="true" /></Link>
           </div>
           <div className="relative hidden min-h-[460px] overflow-hidden lg:block">
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,#183f42_0%,transparent_35%),linear-gradient(0deg,rgba(16,47,50,.25),rgba(16,47,50,.05)),url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=85')] bg-cover bg-center" role="img" aria-label="A bright, welcoming creative studio workspace" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,#204d38_0%,transparent_35%),linear-gradient(0deg,rgba(23,61,44,.25),rgba(23,61,44,.05)),url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=85')] bg-cover bg-center" role="img" aria-label="A bright, welcoming creative studio workspace" />
             <div className="absolute bottom-9 left-8 right-8 rounded-2xl border border-white/15 bg-forest/65 p-5 text-white backdrop-blur-md xl:left-12 xl:right-12">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#efb99a]"><UsersRound size={15} aria-hidden="true" /> Made for good collaboration</div>
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#cfe5d2]"><UsersRound size={15} aria-hidden="true" /> Made for good collaboration</div>
               <p className="mt-2 font-serif text-2xl">Space to make it yours.</p>
             </div>
           </div>
