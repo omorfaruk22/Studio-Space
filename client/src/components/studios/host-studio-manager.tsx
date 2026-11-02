@@ -54,14 +54,12 @@ export function HostStudioManager() {
   async function setAvailability(studio: HostStudio) {
     setBusyId(studio.id);
     try {
-      const response = studio.isAvailable
-        ? await fetch(`/api/host/studios/${studio.id}`, { method: "DELETE", credentials: "same-origin" })
-        : await fetch(`/api/host/studios/${studio.id}/availability`, {
-            method: "PATCH",
-            headers: { "content-type": "application/json" },
-            credentials: "same-origin",
-            body: JSON.stringify({ isAvailable: true }),
-          });
+      const response = await fetch(`/api/host/studios/${studio.id}/availability`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ isAvailable: !studio.isAvailable }),
+      });
       const result = (await response.json()) as { studio?: HostStudio; message?: string };
       if (!response.ok || !result.studio) throw new Error(result.message || "Could not update this listing.");
       setStudios((current) => current.map((item) => item.id === studio.id ? result.studio! : item));
