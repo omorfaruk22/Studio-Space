@@ -68,3 +68,14 @@ Use separate test accounts for a customer and a host. Do not add real passwords 
 The production deployment uses Vercel for the frontend, Render for the API, MongoDB Atlas for persistence, Google OAuth for optional Google login, and ImgBB for host image uploads. Create throwaway test accounts and disposable listings in the deployed app for the manual checks above; this project intentionally does not publish shared test passwords.
 
 Record the date, deployment commit, smoke check result, manual checklist result, and any failures in the release/commit notes when completing a release. Never record passwords, access tokens, or secret environment-variable values.
+
+## Verification record — 2026-11-02
+
+- Commit checked: `79eacb2` (`origin/main` matched `HEAD`).
+- Production smoke check: **12/12 passed**. The live API health endpoint reported MongoDB connected and ready; the website and discovery route returned HTTP 200; anonymous protected API requests returned HTTP 401.
+- Server tests: **5/5 passed**. Client lint passed.
+- Isolated end-to-end API check: **63 checks passed** against a newly named temporary Atlas database. The run covered registration, sign-in/out, studio create/edit/hide/show/delete, discovery filters, ownership checks, saved studios, booking creation/cancellation/confirmation/decline, capacity and date validation, adjacent and overlapping bookings, concurrent confirmations, PDF generation, and newsletter idempotency. The temporary database and its test records were dropped after the run; production records were not changed.
+- Responsive spot-check: **390 × 844 px** on home, mobile navigation, discovery, login, registration, add-studio, dashboard, customer bookings, host booking requests, and saved studios. The layouts fit the mobile viewport; the temporary viewport override was reset.
+- Local client production build compiled and completed TypeScript checking, then failed during `/dashboard` prerender because Windows returned `EPERM` while Next.js created a generated `.next` directory. Production home and discovery routes were reachable; rerun the full build in Vercel’s build environment to clear this local-only verification gap.
+- Production currently has zero public studios, so live listing and booking flows still need a staging listing or owner-approved test records before they can be exercised against the deployed database.
+- Operational integrations still require owner setup if they are part of the launch scope: a mailing-list delivery provider and real identity/safety/support services. Confirm the ImgBB API key in Render before accepting file-upload tests. The site currently explains that newsletter campaigns are not sent and does not claim verification, insurance, or 24/7 support.
