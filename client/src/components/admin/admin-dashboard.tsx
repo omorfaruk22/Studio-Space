@@ -48,6 +48,19 @@ type AdminOverview = {
 
 type ApiResponse = Partial<AdminOverview> & { message?: string };
 
+async function fetchAdminOverview(): Promise<AdminOverview> {
+  const response = await fetch("/api/admin/overview", { cache: "no-store", credentials: "same-origin" });
+  const result = (await response.json()) as ApiResponse;
+  if (!response.ok || !result.stats || !Array.isArray(result.studios) || !Array.isArray(result.bookings)) {
+    if (response.status === 403) {
+      throw new Error("This account is not an admin yet. Add this email to ADMIN_EMAILS in Render, then redeploy the API.");
+    }
+    if (response.status === 401) throw new Error("Your login session expired. Log in again to continue.");
+    throw new Error(result.message || "Could not load the admin dashboard.");
+  }
+  return result as AdminOverview;
+}
+
 function displayDate(value?: string): string {
   if (!value) return "—";
   const date = new Date(value);
@@ -64,16 +77,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/admin/overview", { cache: "no-store", credentials: "same-origin" });
-      const result = (await response.json()) as ApiResponse;
-      if (!response.ok || !result.stats || !Array.isArray(result.studios) || !Array.isArray(result.bookings)) {
-        if (response.status === 403) {
-          throw new Error("This account is not an admin yet. Add this email to ADMIN_EMAILS in Render, then redeploy the API.");
-        }
-        if (response.status === 401) throw new Error("Your login session expired. Log in again to continue.");
-        throw new Error(result.message || "Could not load the admin dashboard.");
-      }
-      setOverview(result as AdminOverview);
+      setOverview(await fetchAdminOverview());
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not load the admin dashboard.");
       setOverview(null);
@@ -83,8 +87,26 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   }, []);
 
   useEffect(() => {
-    void loadOverview();
-  }, [loadOverview]);
+    let active = true;
+    void fetchAdminOverview()
+      .then((data) => {
+        if (active) {
+          setOverview(data);
+          setError("");
+        }
+      })
+      .catch((cause: unknown) => {
+        if (active) {
+          setError(cause instanceof Error ? cause.message : "Could not load the admin dashboard.");
+          setOverview(null);
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => { active = false; };
+  }, []);
 
   async function toggleStudio(studio: AdminStudio) {
     setBusyStudioId(studio.id);
@@ -97,16 +119,17 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
       });
       const result = (await response.json()) as { studio?: { id: string; isAvailable: boolean }; message?: string };
       if (!response.ok || !result.studio) throw new Error(result.message || "Could not update this studio.");
+      const isAvailable = result.studio.isAvailable;
       setOverview((current) => current ? {
         ...current,
-        studios: current.studios.map((item) => item.id === studio.id ? { ...item, isAvailable: result.studio!.isAvailable } : item),
+        studios: current.studios.map((item) => item.id === studio.id ? { ...item, isAvailable } : item),
         stats: {
           ...current.stats,
-          liveStudioCount: current.stats.liveStudioCount + (result.studio.isAvailable ? 1 : -1),
-          hiddenStudioCount: current.stats.hiddenStudioCount + (result.studio.isAvailable ? -1 : 1),
+          liveStudioCount: current.stats.liveStudioCount + (isAvailable ? 1 : -1),
+          hiddenStudioCount: current.stats.hiddenStudioCount + (isAvailable ? -1 : 1),
         },
       } : current);
-      toast.success(result.studio.isAvailable ? "Studio is visible in search." : "Studio is hidden from search.");
+      toast.success(isAvailable ? "Studio is visible in search." : "Studio is hidden from search.");
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "Could not update this studio.");
     } finally {
