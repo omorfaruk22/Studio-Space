@@ -1,6 +1,7 @@
 import { Router } from "express";
 import mongoose from "mongoose";
 import { connectDatabase } from "../config/database.js";
+import { env } from "../config/env.js";
 import { requireAdmin } from "../middleware/requireAdmin.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { Booking } from "../models/Booking.js";
@@ -12,6 +13,13 @@ export const adminRouter = Router();
 const bookingStatuses = ["Pending", "Confirmed", "Completed", "Cancelled", "Declined"] as const;
 
 class BookingConflictError extends Error {}
+
+adminRouter.get("/admin/access", requireAuth, (_request, response) => {
+  const session = response.locals.authSession as { user?: { email?: string } } | undefined;
+  const email = session?.user?.email?.trim().toLowerCase();
+  response.setHeader("cache-control", "no-store");
+  response.json({ isAdmin: Boolean(email && env.adminEmails.includes(email)) });
+});
 
 adminRouter.use("/admin", requireAuth, requireAdmin);
 

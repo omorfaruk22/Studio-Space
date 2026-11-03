@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   Plus,
+  ShieldCheck,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -39,6 +40,8 @@ const accountLinks = [
   { label: "Booking Requests", href: "/host-bookings", icon: CalendarDays },
 ] as const;
 
+const adminAccountLink = { label: "Admin Dashboard", href: "/admin", icon: ShieldCheck };
+
 function initials(name: string) {
   return name
     .trim()
@@ -62,7 +65,31 @@ export function SiteHeader({ user = null }: SiteHeaderProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
   const headerRef = useRef<HTMLElement>(null);
+  const userEmail = user?.email ?? "";
+  const isAdmin = Boolean(userEmail && adminEmail && userEmail.toLowerCase() === adminEmail.toLowerCase());
+  const visibleAccountLinks = isAdmin ? [...accountLinks, adminAccountLink] : accountLinks;
+
+  useEffect(() => {
+    if (!userEmail) return;
+    let active = true;
+
+    void fetch("/api/admin/access", { cache: "no-store", credentials: "same-origin" })
+      .then(async (response) => {
+        if (!response.ok) return false;
+        const result = (await response.json()) as { isAdmin?: boolean };
+        return result.isAdmin === true;
+      })
+      .then((allowed) => {
+        if (active) setAdminEmail(allowed ? userEmail : "");
+      })
+      .catch(() => {
+        if (active) setAdminEmail("");
+      });
+
+    return () => { active = false; };
+  }, [userEmail]);
 
   useEffect(() => {
     if (!profileOpen) return;
@@ -156,7 +183,7 @@ export function SiteHeader({ user = null }: SiteHeaderProps) {
                       <p className="truncate text-sm font-semibold text-ink">{user.name}</p>
                       <p className="mt-1 truncate text-xs text-muted">{user.email}</p>
                     </div>
-                    {accountLinks.map(({ label, href, icon: Icon }) => (
+                    {visibleAccountLinks.map(({ label, href, icon: Icon }) => (
                       <Link key={href} href={href} role="menuitem" onClick={() => setProfileOpen(false)} className="flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm text-ink/80 transition hover:bg-sand hover:text-ink">
                         <Icon size={16} aria-hidden="true" /> {label}
                       </Link>
@@ -203,7 +230,7 @@ export function SiteHeader({ user = null }: SiteHeaderProps) {
                     <button type="button" onClick={() => { setMobileOpen(false); user.onLogout(); }} className="inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-full bg-forest px-2 text-sm font-semibold text-white"><LogOut size={16} aria-hidden="true" /> Log out</button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {accountLinks.slice(1).map(({ label, href }) => (
+                    {visibleAccountLinks.slice(1).map(({ label, href }) => (
                       <Link key={href} href={href} onClick={() => setMobileOpen(false)} className="flex min-h-11 min-w-0 items-center justify-center rounded-xl bg-white px-3 py-2 text-center text-xs font-medium leading-4 text-ink">{label}</Link>
                     ))}
                   </div>

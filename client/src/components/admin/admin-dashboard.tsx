@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Pencil, RefreshCw, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Pencil, RefreshCw, Search, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/loading";
+import { Input } from "@/components/ui/input";
 import { studioCategoryLabels, type StudioCategory } from "@/lib/studio-types";
 import type { BookingStatus } from "@/lib/booking-types";
 
@@ -76,6 +77,10 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [busyStudioId, setBusyStudioId] = useState("");
   const [bookingStatusDrafts, setBookingStatusDrafts] = useState<Record<string, BookingStatus>>({});
   const [savingBookingId, setSavingBookingId] = useState("");
+  const [studioSearch, setStudioSearch] = useState("");
+  const [studioVisibilityFilter, setStudioVisibilityFilter] = useState<"all" | "visible" | "hidden">("all");
+  const [bookingSearch, setBookingSearch] = useState("");
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<"all" | BookingStatus>("all");
 
   const loadOverview = useCallback(async () => {
     setLoading(true);
@@ -180,6 +185,20 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   }
 
   const stats = overview?.stats;
+  const normalizedStudioSearch = studioSearch.trim().toLowerCase();
+  const filteredStudios = (overview?.studios ?? []).filter((studio) => {
+    const matchesSearch = !normalizedStudioSearch || [studio.title, studio.category, studio.location, studio.ownerName, studio.ownerEmail]
+      .some((value) => value.toLowerCase().includes(normalizedStudioSearch));
+    const matchesVisibility = studioVisibilityFilter === "all"
+      || (studioVisibilityFilter === "visible" ? studio.isAvailable : !studio.isAvailable);
+    return matchesSearch && matchesVisibility;
+  });
+  const normalizedBookingSearch = bookingSearch.trim().toLowerCase();
+  const filteredBookings = (overview?.bookings ?? []).filter((booking) => {
+    const matchesSearch = !normalizedBookingSearch || [booking.studioTitle, booking.studioLocation, booking.bookingDate]
+      .some((value) => value.toLowerCase().includes(normalizedBookingSearch));
+    return matchesSearch && (bookingStatusFilter === "all" || booking.status === bookingStatusFilter);
+  });
   const metrics = [
     { label: "All studios", value: stats?.studioCount ?? 0 },
     { label: "Visible studios", value: stats?.liveStudioCount ?? 0 },
@@ -227,10 +246,25 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           <h2 id="admin-studios-heading" className="mt-2 font-serif text-3xl text-ink">Studio listings</h2>
         </div>
         {loading ? <Card><CardContent className="p-6 text-sm text-muted">Loading studio listings…</CardContent></Card> : null}
-        {!loading && overview && overview.studios.length === 0 ? <Card><CardContent className="p-6 text-sm text-muted">No studio listings yet.</CardContent></Card> : null}
         {!loading && overview && overview.studios.length > 0 ? (
+          <div className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="relative">
+              <Search size={17} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
+              <Input type="search" aria-label="Search studio listings" value={studioSearch} onChange={(event) => setStudioSearch(event.target.value)} placeholder="Search studio, location, host…" className="pl-11" />
+            </div>
+            <label className="sr-only" htmlFor="studio-visibility-filter">Filter studio visibility</label>
+            <select id="studio-visibility-filter" value={studioVisibilityFilter} onChange={(event) => setStudioVisibilityFilter(event.target.value as "all" | "visible" | "hidden")} className="min-h-12 rounded-2xl border border-line bg-white px-4 text-sm text-ink focus:border-focus focus:outline-none focus:ring-4 focus:ring-focus/10">
+              <option value="all">All listings</option>
+              <option value="visible">Visible</option>
+              <option value="hidden">Hidden</option>
+            </select>
+          </div>
+        ) : null}
+        {!loading && overview && overview.studios.length === 0 ? <Card><CardContent className="p-6 text-sm text-muted">No studio listings yet.</CardContent></Card> : null}
+        {!loading && overview && overview.studios.length > 0 && filteredStudios.length === 0 ? <Card><CardContent className="p-6 text-sm text-muted">No studio listings match these filters.</CardContent></Card> : null}
+        {!loading && overview && filteredStudios.length > 0 ? (
           <div className="grid gap-3">
-            {overview.studios.map((studio) => (
+            {filteredStudios.map((studio) => (
               <Card key={studio.id}>
                 <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                   <div className="min-w-0">
@@ -264,10 +298,24 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
           <h2 id="admin-bookings-heading" className="mt-2 font-serif text-3xl text-ink">Booking requests</h2>
         </div>
         {loading ? <Card><CardContent className="p-6 text-sm text-muted">Loading booking activity…</CardContent></Card> : null}
-        {!loading && overview && overview.bookings.length === 0 ? <Card><CardContent className="p-6 text-sm text-muted">No booking requests yet.</CardContent></Card> : null}
         {!loading && overview && overview.bookings.length > 0 ? (
+          <div className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <div className="relative">
+              <Search size={17} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
+              <Input type="search" aria-label="Search booking requests" value={bookingSearch} onChange={(event) => setBookingSearch(event.target.value)} placeholder="Search studio, location, date…" className="pl-11" />
+            </div>
+            <label className="sr-only" htmlFor="booking-status-filter">Filter booking status</label>
+            <select id="booking-status-filter" value={bookingStatusFilter} onChange={(event) => setBookingStatusFilter(event.target.value as "all" | BookingStatus)} className="min-h-12 rounded-2xl border border-line bg-white px-4 text-sm text-ink focus:border-focus focus:outline-none focus:ring-4 focus:ring-focus/10">
+              <option value="all">All statuses</option>
+              {(["Pending", "Confirmed", "Completed", "Cancelled", "Declined"] satisfies BookingStatus[]).map((status) => <option key={status} value={status}>{status}</option>)}
+            </select>
+          </div>
+        ) : null}
+        {!loading && overview && overview.bookings.length === 0 ? <Card><CardContent className="p-6 text-sm text-muted">No booking requests yet.</CardContent></Card> : null}
+        {!loading && overview && overview.bookings.length > 0 && filteredBookings.length === 0 ? <Card><CardContent className="p-6 text-sm text-muted">No booking requests match these filters.</CardContent></Card> : null}
+        {!loading && overview && filteredBookings.length > 0 ? (
           <div className="grid gap-3">
-            {overview.bookings.map((booking) => (
+            {filteredBookings.map((booking) => (
               <Card key={booking.id}>
                 <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                   <div>

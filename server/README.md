@@ -37,7 +37,7 @@ Studio cover and gallery uploads use ImgBB. Set `IMGBB_API_KEY` in the server en
 
 ## Admin dashboard
 
-Set `ADMIN_EMAILS` in the server environment to a comma-separated allowlist of StudioSpace account email addresses. Only authenticated accounts on this allowlist can use the `/api/admin/*` routes. The client dashboard is available at `/admin` and supports editing all studio listing fields, changing listing visibility, and managing booking statuses. Booking confirmation checks for overlapping confirmed bookings.
+Set `ADMIN_EMAILS` in the server environment to a comma-separated allowlist of StudioSpace account email addresses. Only authenticated accounts on this allowlist can use admin actions. The client dashboard is available at `/admin`, the profile menu links to it only after a server-side admin access check, and its studio and booking lists support search and filters. Admins can edit studio listing fields, change visibility, and manage booking statuses. Booking confirmation checks for overlapping confirmed bookings.
 
 ## Booking API
 
