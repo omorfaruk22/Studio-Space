@@ -7,6 +7,7 @@ import { auth } from "./auth.js";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { accountRouter } from "./routes/account.js";
+import { adminRouter } from "./routes/admin.js";
 import { bookingsRouter } from "./routes/bookings.js";
 import { healthRouter } from "./routes/health.js";
 import { hostStudiosRouter } from "./routes/host-studios.js";
@@ -41,6 +42,7 @@ app.get("/api/session", async (request, response, next) => {
 app.use(express.json({ limit: "1mb" }));
 app.use("/api", healthRouter);
 app.use("/api", accountRouter);
+app.use("/api", adminRouter);
 app.use("/api", bookingsRouter);
 app.use("/api", studiosRouter);
 app.use("/api", hostStudiosRouter);

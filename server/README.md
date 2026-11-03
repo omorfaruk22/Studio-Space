@@ -35,6 +35,10 @@ All host studio routes require a signed-in session and scope records to the auth
 
 Studio cover and gallery uploads use ImgBB. Set `IMGBB_API_KEY` in the server environment; uploads are proxied through the authenticated API and limited to JPEG, PNG, and WebP images up to 8 MB each.
 
+## Admin dashboard
+
+Set `ADMIN_EMAILS` in the server environment to a comma-separated allowlist of StudioSpace account email addresses. Only authenticated accounts on this allowlist can use the `/api/admin/*` routes. The client dashboard is available at `/admin` and supports studio visibility moderation plus read-only booking activity.
+
 ## Booking API
 
 Booking endpoints require a signed-in session and only expose the current user's bookings:

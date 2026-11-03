@@ -29,6 +29,10 @@ In Render, set both `CLIENT_ORIGIN` and `BETTER_AUTH_URL` to the exact Vercel pr
 
 Use the actual Vercel origin in both entries. Keep `MONGODB_URI`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, and `IMGBB_API_KEY` in provider environment settings only; never commit them. Render generates `BETTER_AUTH_SECRET` from the Blueprint.
 
+## Admin access
+
+To grant platform-admin access, add `ADMIN_EMAILS` to the Render API service environment. Set its value to one or more account email addresses separated by commas, then save and redeploy. The email must match the signed-in StudioSpace account. Admins can open `/admin` to review platform totals, recent studio listings, and booking requests, and to hide or show a listing. All admin API endpoints enforce the same server-side allowlist.
+
 ## 4. Verify the deployment
 
 - Open `https://<render-service>.onrender.com/api/health`; confirm the response says the API is healthy and the database is connected.
