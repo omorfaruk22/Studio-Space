@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Eye, EyeOff, RefreshCw, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { Eye, EyeOff, Pencil, RefreshCw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/loading";
 import { studioCategoryLabels, type StudioCategory } from "@/lib/studio-types";
+import type { BookingStatus } from "@/lib/booking-types";
 
 type AdminStudio = {
   id: string;
@@ -29,7 +31,7 @@ type AdminBooking = {
   endTime: string;
   numberOfPeople: number;
   totalPrice: number;
-  status: string;
+  status: BookingStatus;
   createdAt?: string;
 };
 
@@ -72,6 +74,8 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyStudioId, setBusyStudioId] = useState("");
+  const [bookingStatusDrafts, setBookingStatusDrafts] = useState<Record<string, BookingStatus>>({});
+  const [savingBookingId, setSavingBookingId] = useState("");
 
   const loadOverview = useCallback(async () => {
     setLoading(true);
@@ -137,6 +141,44 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     }
   }
 
+  async function saveBookingStatus(booking: AdminBooking) {
+    const status = bookingStatusDrafts[booking.id] ?? booking.status;
+    if (status === booking.status) return;
+
+    setSavingBookingId(booking.id);
+    try {
+      const response = await fetch(`/api/admin/bookings/${booking.id}/status`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ status }),
+      });
+      const result = (await response.json()) as { booking?: { id: string; status: BookingStatus }; message?: string };
+      if (!response.ok || !result.booking) throw new Error(result.message || "Could not update this booking.");
+
+      const updatedStatus = result.booking.status;
+      setOverview((current) => current ? {
+        ...current,
+        bookings: current.bookings.map((item) => item.id === booking.id ? { ...item, status: updatedStatus } : item),
+        stats: {
+          ...current.stats,
+          pendingBookingCount: current.stats.pendingBookingCount + Number(updatedStatus === "Pending") - Number(booking.status === "Pending"),
+          confirmedBookingCount: current.stats.confirmedBookingCount + Number(updatedStatus === "Confirmed") - Number(booking.status === "Confirmed"),
+        },
+      } : current);
+      setBookingStatusDrafts((current) => {
+        const next = { ...current };
+        delete next[booking.id];
+        return next;
+      });
+      toast.success("Booking status updated.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Could not update this booking.");
+    } finally {
+      setSavingBookingId("");
+    }
+  }
+
   const stats = overview?.stats;
   const metrics = [
     { label: "All studios", value: stats?.studioCount ?? 0 },
@@ -182,7 +224,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
       <section aria-labelledby="admin-studios-heading">
         <div className="mb-4">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">Moderation</p>
-          <h2 id="admin-studios-heading" className="mt-2 font-serif text-3xl text-ink">Recent studio listings</h2>
+          <h2 id="admin-studios-heading" className="mt-2 font-serif text-3xl text-ink">Studio listings</h2>
         </div>
         {loading ? <Card><CardContent className="p-6 text-sm text-muted">Loading studio listings…</CardContent></Card> : null}
         {!loading && overview && overview.studios.length === 0 ? <Card><CardContent className="p-6 text-sm text-muted">No studio listings yet.</CardContent></Card> : null}
@@ -200,10 +242,15 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                     <p className="mt-1 text-sm text-muted">Host: {studio.ownerName} · {studio.ownerEmail}</p>
                     <p className="mt-1 text-xs text-muted">${studio.hourlyRate} / hour · Added {displayDate(studio.createdAt)}</p>
                   </div>
-                  <Button type="button" variant="outline" onClick={() => void toggleStudio(studio)} disabled={busyStudioId === studio.id}>
-                    {busyStudioId === studio.id ? <Spinner className="size-4" label="Updating studio visibility" /> : studio.isAvailable ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
-                    {busyStudioId === studio.id ? "Saving…" : studio.isAvailable ? "Hide listing" : "Show listing"}
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Link href={`/admin/studios/${studio.id}/edit`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-brand hover:text-brand-strong">
+                      <Pencil size={15} aria-hidden="true" /> Edit listing
+                    </Link>
+                    <Button type="button" variant="outline" onClick={() => void toggleStudio(studio)} disabled={busyStudioId === studio.id}>
+                      {busyStudioId === studio.id ? <Spinner className="size-4" label="Updating studio visibility" /> : studio.isAvailable ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+                      {busyStudioId === studio.id ? "Saving…" : studio.isAvailable ? "Hide listing" : "Show listing"}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -214,7 +261,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
       <section aria-labelledby="admin-bookings-heading">
         <div className="mb-4">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">Activity</p>
-          <h2 id="admin-bookings-heading" className="mt-2 font-serif text-3xl text-ink">Recent booking requests</h2>
+          <h2 id="admin-bookings-heading" className="mt-2 font-serif text-3xl text-ink">Booking requests</h2>
         </div>
         {loading ? <Card><CardContent className="p-6 text-sm text-muted">Loading booking activity…</CardContent></Card> : null}
         {!loading && overview && overview.bookings.length === 0 ? <Card><CardContent className="p-6 text-sm text-muted">No booking requests yet.</CardContent></Card> : null}
@@ -228,8 +275,22 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                     <p className="mt-1 text-sm text-muted">{booking.studioLocation} · {booking.bookingDate} · {booking.startTime}–{booking.endTime}</p>
                     <p className="mt-1 text-sm text-muted">{booking.numberOfPeople} people · ${booking.totalPrice.toFixed(2)}</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="rounded-full bg-sand px-3 py-1 text-xs font-semibold text-ink">{booking.status}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label htmlFor={`booking-status-${booking.id}`} className="sr-only">Status for {booking.studioTitle} booking</label>
+                    <select
+                      id={`booking-status-${booking.id}`}
+                      value={bookingStatusDrafts[booking.id] ?? booking.status}
+                      onChange={(event) => setBookingStatusDrafts((current) => ({ ...current, [booking.id]: event.target.value as BookingStatus }))}
+                      className="min-h-10 rounded-full border border-line bg-white px-3 text-xs font-semibold text-ink focus:border-focus focus:outline-none focus:ring-4 focus:ring-focus/10"
+                    >
+                      {(["Pending", "Confirmed", "Completed", "Cancelled", "Declined"] satisfies BookingStatus[]).map((status) => <option key={status} value={status}>{status}</option>)}
+                    </select>
+                    {(bookingStatusDrafts[booking.id] ?? booking.status) !== booking.status ? (
+                      <Button type="button" size="sm" onClick={() => void saveBookingStatus(booking)} disabled={savingBookingId === booking.id}>
+                        {savingBookingId === booking.id ? <Spinner className="size-4" label="Saving booking status" /> : null}
+                        {savingBookingId === booking.id ? "Saving…" : "Save"}
+                      </Button>
+                    ) : null}
                     <span className="text-xs text-muted">Requested {displayDate(booking.createdAt)}</span>
                   </div>
                 </CardContent>

@@ -12,7 +12,7 @@ import { studioCategoryLabels } from "@/lib/studio-types";
 
 const categories: StudioCategory[] = ["photo", "sound-stage", "podcast", "music", "art"];
 
-type StudioFormProps = { studioId?: string; hostName: string; hostEmail: string };
+type StudioFormProps = { studioId?: string; hostName?: string; hostEmail?: string; adminMode?: boolean };
 type StudioResponse = { studio?: HostStudio; message?: string };
 
 function lines(value: FormDataEntryValue | null): string[] {
@@ -35,7 +35,7 @@ async function uploadStudioImage(file: File): Promise<string> {
   return result.url;
 }
 
-export function StudioForm({ studioId, hostName, hostEmail }: StudioFormProps) {
+export function StudioForm({ studioId, hostName = "", hostEmail = "", adminMode = false }: StudioFormProps) {
   const router = useRouter();
   const [studio, setStudio] = useState<HostStudio | null>(null);
   const [loading, setLoading] = useState(Boolean(studioId));
@@ -48,7 +48,8 @@ export function StudioForm({ studioId, hostName, hostEmail }: StudioFormProps) {
 
     async function loadStudio() {
       try {
-        const response = await fetch(`/api/host/studios/${studioId}`, {
+        const endpoint = adminMode ? `/api/admin/studios/${studioId}` : `/api/host/studios/${studioId}`;
+        const response = await fetch(endpoint, {
           cache: "no-store",
           signal: controller.signal,
         });
@@ -66,7 +67,7 @@ export function StudioForm({ studioId, hostName, hostEmail }: StudioFormProps) {
 
     void loadStudio();
     return () => controller.abort();
-  }, [studioId]);
+  }, [adminMode, studioId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -104,7 +105,10 @@ export function StudioForm({ studioId, hostName, hostEmail }: StudioFormProps) {
     try {
       if (coverFile) payload.image = await uploadStudioImage(coverFile);
       if (galleryFiles.length > 0) payload.images = [...galleryUrls, ...await Promise.all(galleryFiles.map(uploadStudioImage))];
-      const response = await fetch(studioId ? `/api/host/studios/${studioId}` : "/api/host/studios", {
+      const endpoint = adminMode
+        ? `/api/admin/studios/${studioId}`
+        : studioId ? `/api/host/studios/${studioId}` : "/api/host/studios";
+      const response = await fetch(endpoint, {
         method: studioId ? "PATCH" : "POST",
         headers: { "content-type": "application/json" },
         credentials: "same-origin",
@@ -113,7 +117,7 @@ export function StudioForm({ studioId, hostName, hostEmail }: StudioFormProps) {
       const result = (await response.json()) as StudioResponse;
       if (!response.ok) throw new Error(result.message || "Could not save this studio.");
       toast.success(studioId ? "Studio listing updated." : "Studio listing created.");
-      router.push("/dashboard");
+      router.push(adminMode ? "/admin" : "/dashboard");
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not connect to StudioSpace.");
@@ -180,17 +184,17 @@ export function StudioForm({ studioId, hostName, hostEmail }: StudioFormProps) {
         <Textarea id="overview" name="overview" required maxLength={5000} defaultValue={studio?.overview ?? ""} placeholder="Tell creators what makes this space a good fit for their project." />
       </FormField>
 
-      <div className="grid gap-5 border-t border-line pt-5 sm:grid-cols-2">
+      {!adminMode ? <div className="grid gap-5 border-t border-line pt-5 sm:grid-cols-2">
         <FormField label="Host name" htmlFor="hostName" hint="This is taken from your account and cannot be changed here.">
           <Input id="hostName" value={hostName} readOnly className="bg-sand/70" />
         </FormField>
         <FormField label="Host email" htmlFor="hostEmail" hint="This is taken from your account and cannot be changed here.">
           <Input id="hostEmail" type="email" value={hostEmail} readOnly className="bg-sand/70" />
         </FormField>
-      </div>
+      </div> : null}
 
       <div className="flex flex-col-reverse gap-3 border-t border-line pt-5 sm:flex-row sm:justify-end">
-        <Button type="button" variant="outline" onClick={() => router.push("/dashboard")}>Cancel</Button>
+        <Button type="button" variant="outline" onClick={() => router.push(adminMode ? "/admin" : "/dashboard")}>Cancel</Button>
         <Button type="submit" size="lg" disabled={submitting}>{submitting ? <><Spinner className="size-4" label="Saving studio listing" />Saving listing…</> : studioId ? "Save changes" : "Create studio listing"}</Button>
       </div>
     </form>

@@ -9,7 +9,7 @@ const categories = ["photo", "sound-stage", "podcast", "music", "art"] as const;
 const maxImages = 10;
 const maxAmenities = 20;
 
-type StudioInput = {
+export type StudioInput = {
   title: string;
   category: (typeof categories)[number];
   hourlyRate: number;
@@ -43,7 +43,7 @@ function nonNegativeNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
 }
 
-function parseStudioInput(value: unknown): { input?: StudioInput; message?: string } {
+export function parseStudioInput(value: unknown): { input?: StudioInput; message?: string } {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return { message: "Enter the studio details and try again." };
   }
@@ -101,7 +101,7 @@ function parseStudioInput(value: unknown): { input?: StudioInput; message?: stri
   };
 }
 
-function serializeStudio(studio: {
+export function serializeStudio(studio: {
   _id: unknown;
   title: string;
   category: string;
