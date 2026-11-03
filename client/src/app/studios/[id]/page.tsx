@@ -5,7 +5,7 @@ import { BookingDialogButton } from "@/components/bookings/booking-dialog-button
 import { StudioGallery } from "@/components/studios/studio-gallery";
 import { SectionHeading } from "@/components/ui/section-heading";
 import type { FeaturedStudio } from "@/lib/studio-types";
-import { studioCategoryLabels } from "@/lib/studio-types";
+import { studioCategoryLabels, studioCategoryToneClasses } from "@/lib/studio-types";
 import { getCurrentSession } from "@/lib/server-session";
 
 type StudioDetails = FeaturedStudio & {
@@ -35,7 +35,7 @@ function StudioContent({ studio, isAuthenticated }: { studio: StudioDetails; isA
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_340px] xl:gap-12">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-sage px-3 py-1.5 text-xs font-semibold text-forest">{category}</span>
+            <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${studioCategoryToneClasses[studio.category]}`}>{category}</span>
             {studio.rating > 0 ? <span className="inline-flex items-center gap-1 text-sm font-semibold text-ink"><Star size={15} className="fill-[#d89d49] text-[#d89d49]" aria-hidden="true" />{studio.rating.toFixed(1)} rating</span> : <span className="text-sm text-muted">New listing</span>}
           </div>
           <h1 className="mt-4 font-serif text-3xl leading-tight tracking-tight text-ink sm:text-4xl lg:text-5xl">{studio.title}</h1>

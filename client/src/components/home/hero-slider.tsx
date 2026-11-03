@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 const slides = [
   {
     eyebrow: "Space for the first frame",
-    title: <>Find the light.<br />Make the <em className="font-normal text-[#cfe5d2]">moment.</em></>,
+    title: <>Find the light.<br />Make the <em className="font-normal text-accent-green-soft">moment.</em></>,
     description: "From sunlit studios to fully equipped sets, find a backdrop that brings your next idea into focus.",
     image: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=2200&q=90",
     alt: "A light-filled creative studio with large windows and a long shared worktable",
@@ -16,7 +16,7 @@ const slides = [
   },
   {
     eyebrow: "A room with its own rhythm",
-    title: <>Make some<br /><em className="font-normal text-[#cfe5d2]">beautiful noise.</em></>,
+    title: <>Make some<br /><em className="font-normal text-accent-green-soft">beautiful noise.</em></>,
     description: "Discover recording rooms, rehearsal spaces, and sound stages built for ideas worth hearing.",
     image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=2200&q=90",
     alt: "Warmly lit recording studio with a mixing desk and acoustic treatment",
@@ -24,7 +24,7 @@ const slides = [
   },
   {
     eyebrow: "Good things take shape here",
-    title: <>Your next idea<br />needs a little <em className="font-normal text-[#cfe5d2]">room.</em></>,
+    title: <>Your next idea<br />needs a little <em className="font-normal text-accent-green-soft">room.</em></>,
     description: "Find a workshop, a set, or a quiet corner to make the thing you have been thinking about.",
     image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=2200&q=90",
     alt: "A thoughtfully designed creative interior with warm natural materials",
@@ -86,7 +86,7 @@ export function HeroSlider() {
         <div className="relative z-10 flex min-h-[570px] flex-col justify-between px-6 py-8 sm:min-h-[610px] sm:px-10 sm:py-10 lg:min-h-[650px] lg:px-16 lg:py-14">
           <div aria-live={isPaused ? "polite" : "off"} aria-atomic="true" className="max-w-2xl">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/85 backdrop-blur-sm sm:text-xs">
-              <span className="size-1.5 rounded-full bg-[#cfe5d2]" aria-hidden="true" /> {slides[activeIndex].eyebrow}
+              <span className="size-1.5 rounded-full bg-accent-yellow" aria-hidden="true" /> {slides[activeIndex].eyebrow}
             </p>
             <h1 className="mt-7 font-serif text-[2.8rem] leading-[1.02] tracking-tight sm:text-6xl lg:text-[4.75rem]">{slides[activeIndex].title}</h1>
             <p className="mt-5 max-w-lg text-sm leading-6 text-white/75 sm:mt-6 sm:text-lg sm:leading-8">{slides[activeIndex].description}</p>

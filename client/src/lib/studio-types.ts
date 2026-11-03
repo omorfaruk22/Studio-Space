@@ -30,3 +30,11 @@ export const studioCategoryLabels: Record<StudioCategory, string> = {
   music: "Music suite",
   art: "Art workshop",
 };
+
+export const studioCategoryToneClasses: Record<StudioCategory, string> = {
+  photo: "bg-accent-rose-soft text-accent-rose-strong",
+  "sound-stage": "bg-accent-blue-soft text-accent-blue-strong",
+  podcast: "bg-accent-violet-soft text-accent-violet-strong",
+  music: "bg-accent-yellow-soft text-accent-yellow-strong",
+  art: "bg-accent-green-soft text-accent-green-strong",
+};

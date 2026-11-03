@@ -14,17 +14,20 @@ import {
   Palette,
   Sparkles,
   UsersRound,
+  type LucideIcon,
 } from "lucide-react";
 import { FeaturedStudios } from "@/components/home/featured-studios";
 import { HeroSlider } from "@/components/home/hero-slider";
 import { SectionHeading } from "@/components/ui/section-heading";
+import type { StudioCategory } from "@/lib/studio-types";
+import { studioCategoryToneClasses } from "@/lib/studio-types";
 
-const categories = [
-  { name: "Photo studios", detail: "Natural light to full production", value: "photo", icon: Camera, tone: "bg-[#f4e4d8] text-[#9c553e]" },
-  { name: "Sound stages", detail: "Room to build your scene", value: "sound-stage", icon: AudioLines, tone: "bg-[#e1e9df] text-[#42684c]" },
-  { name: "Podcast rooms", detail: "Find your voice, in the right room", value: "podcast", icon: Mic2, tone: "bg-[#e4e4f1] text-[#55517d]" },
-  { name: "Music suites", detail: "Make space for your next track", value: "music", icon: Headphones, tone: "bg-[#f2e7cf] text-[#98723a]" },
-  { name: "Art workshops", detail: "Get hands-on and make a mess", value: "art", icon: Palette, tone: "bg-[#f0dfdf] text-[#9a4f5a]" },
+const categories: { name: string; detail: string; value: StudioCategory; icon: LucideIcon }[] = [
+  { name: "Photo studios", detail: "Natural light to full production", value: "photo", icon: Camera },
+  { name: "Sound stages", detail: "Room to build your scene", value: "sound-stage", icon: AudioLines },
+  { name: "Podcast rooms", detail: "Find your voice, in the right room", value: "podcast", icon: Mic2 },
+  { name: "Music suites", detail: "Make space for your next track", value: "music", icon: Headphones },
+  { name: "Art workshops", detail: "Get hands-on and make a mess", value: "art", icon: Palette },
 ];
 
 const bookingSteps = [
@@ -59,9 +62,9 @@ export default function Home() {
         <div className="mx-auto max-w-page px-5 py-16 sm:px-8 sm:py-20 xl:px-12">
           <SectionHeading eyebrow="Find your kind of space" title="Made for the way you create." description="From first ideas to final takes, find a space that fits the work." />
           <div className="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {categories.map(({ name, detail, value, icon: Icon, tone }) => (
+            {categories.map(({ name, detail, value, icon: Icon }) => (
               <Link key={value} href={`/studios?category=${value}`} className="group rounded-3xl border border-line bg-white p-5 transition duration-200 hover:-translate-y-1 hover:border-brand/40 hover:shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
-                <span className={`grid size-12 place-items-center rounded-2xl ${tone}`}><Icon size={22} strokeWidth={1.7} aria-hidden="true" /></span>
+                <span className={`grid size-12 place-items-center rounded-2xl ${studioCategoryToneClasses[value]}`}><Icon size={22} strokeWidth={1.7} aria-hidden="true" /></span>
                 <span className="mt-6 block font-serif text-xl tracking-tight text-ink">{name}</span>
                 <span className="mt-2 block min-h-10 text-sm leading-5 text-muted">{detail}</span>
                 <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-strong">Browse spaces <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
@@ -87,12 +90,12 @@ export default function Home() {
       <section id="about" className="mx-auto max-w-page px-5 pb-16 sm:px-8 sm:pb-20 xl:px-12" aria-labelledby="support-heading">
         <div className="grid overflow-hidden rounded-[2rem] bg-forest text-white lg:grid-cols-[1.05fr_0.95fr]">
           <div className="px-7 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-14">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#cfe5d2]">Good work starts with clear details</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent-green-soft">Good work starts with clear details</p>
             <h2 id="support-heading" className="mt-4 max-w-xl font-serif text-3xl leading-tight tracking-tight sm:text-4xl">Plan your session with the host.</h2>
             <p className="mt-5 max-w-xl text-sm leading-7 text-white/70 sm:text-base">StudioSpace connects independent hosts and creators. Review the listing and booking status so both sides can agree on the practical details.</p>
             <ul className="mt-8 space-y-4">
               {hostBenefits.map(({ title, detail, icon: Icon }) => (
-                <li key={title} className="flex gap-3"><span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-white/10 text-[#cfe5d2]"><Icon size={18} aria-hidden="true" /></span><span><span className="block text-sm font-semibold">{title}</span><span className="mt-1 block text-sm leading-5 text-white/65">{detail}</span></span></li>
+                <li key={title} className="flex gap-3"><span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-white/10 text-accent-yellow"><Icon size={18} aria-hidden="true" /></span><span><span className="block text-sm font-semibold">{title}</span><span className="mt-1 block text-sm leading-5 text-white/65">{detail}</span></span></li>
               ))}
             </ul>
             <Link href="/register" className="mt-9 inline-flex min-h-12 items-center gap-2 rounded-full bg-brand px-6 text-sm font-semibold text-white transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Join the community <ArrowRight size={16} aria-hidden="true" /></Link>

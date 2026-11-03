@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Aperture, ArrowRight, MapPin, Star } from "lucide-react";
 import type { FeaturedStudio } from "@/lib/studio-types";
-import { studioCategoryLabels } from "@/lib/studio-types";
+import { studioCategoryLabels, studioCategoryToneClasses } from "@/lib/studio-types";
 import { FavoriteButton } from "@/components/studios/favorite-button";
 
 export function StudioCard({ studio }: { studio: FeaturedStudio }) {
@@ -16,8 +16,8 @@ export function StudioCard({ studio }: { studio: FeaturedStudio }) {
             <div className="absolute inset-0 grid place-items-center bg-[linear-gradient(135deg,#dce8d8,#eeeae0)] text-forest"><Aperture size={58} strokeWidth={1} aria-hidden="true" /></div>
           )}
         </Link>
-        <span className="pointer-events-none absolute left-4 top-4 z-10 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-semibold text-ink shadow-card">{studioCategoryLabels[studio.category] ?? "Creative space"}</span>
-        <span className="pointer-events-none absolute right-[4.25rem] top-4 z-10 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1.5 text-xs font-semibold text-ink shadow-card">{studio.rating > 0 ? <><Star size={13} className="fill-[#d89d49] text-[#d89d49]" aria-hidden="true" />{studio.rating.toFixed(1)}</> : "New"}</span>
+        <span className={`pointer-events-none absolute left-4 top-4 z-10 rounded-full px-3 py-1.5 text-[11px] font-semibold shadow-card ${studioCategoryToneClasses[studio.category]}`}>{studioCategoryLabels[studio.category] ?? "Creative space"}</span>
+        <span className="pointer-events-none absolute right-[4.25rem] top-4 z-10 inline-flex items-center gap-1 rounded-full bg-accent-yellow-soft px-2.5 py-1.5 text-xs font-semibold text-accent-yellow-strong shadow-card">{studio.rating > 0 ? <><Star size={13} className="fill-accent-yellow text-accent-yellow" aria-hidden="true" />{studio.rating.toFixed(1)}</> : "New"}</span>
         <FavoriteButton studioId={studio.id} studioTitle={studio.title} />
       </div>
       <Link href={`/studios/${studio.id}`} className="block p-5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:p-6">
