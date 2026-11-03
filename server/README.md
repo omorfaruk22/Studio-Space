@@ -37,7 +37,25 @@ Studio cover and gallery uploads use ImgBB. Set `IMGBB_API_KEY` in the server en
 
 ## Admin dashboard
 
-Set `ADMIN_EMAILS` in the server environment to a comma-separated allowlist of StudioSpace account email addresses. Only authenticated accounts on this allowlist can use admin actions. The client dashboard is available at `/admin`, the profile menu links to it only after a server-side admin access check, and its studio and booking lists support search and filters. Admins can edit studio listing fields, change visibility, and manage booking statuses. Booking confirmation checks for overlapping confirmed bookings.
+Set `ADMIN_EMAILS` in the server environment to a comma-separated allowlist of StudioSpace account email addresses. Only authenticated accounts on this allowlist can use admin actions. The client dashboard is available at `/admin`, the profile menu links to it only after a server-side admin access check, and its studio and booking lists support search and filters. Admins can edit studio listing fields, approve or reject new listings, verify host profiles, change visibility, and manage booking statuses. Booking confirmation checks for overlapping confirmed bookings.
+
+New and host-edited listings remain private until an admin approves them. Older listings without a moderation status remain public for backward compatibility. Host verification is a manual review of public business details; the app intentionally has no identity-document upload.
+
+## Payments and email
+
+Rental checkout uses the SSLCommerz hosted payment page. A booking must be confirmed before checkout. The API validates each gateway result with SSLCommerz before marking a booking paid; a browser redirect alone never counts as payment. The current booking currency is USD, so confirm that the merchant account supports USD settlement and displays the expected conversion before enabling live payments.
+
+Set these API environment variables in Render to start in sandbox mode:
+
+- `SSLCOMMERZ_STORE_ID` and `SSLCOMMERZ_STORE_PASSWORD` from the merchant sandbox.
+- `SSLCOMMERZ_SANDBOX=true`.
+- `PUBLIC_API_URL=https://<your-render-service>.onrender.com`.
+
+Configure the merchant IPN URL as `https://<your-render-service>.onrender.com/api/payments/sslcommerz/ipn`. Only switch `SSLCOMMERZ_SANDBOX=false` after successful sandbox checkout and validation, using production merchant credentials. See the [SSLCommerz developer documentation](https://developer.sslcommerz.com/docs.html).
+
+Email notifications use SMTP through Nodemailer and remain disabled until `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `EMAIL_FROM` are set in the API environment. No provider credentials are stored in the repository. Events currently notify about booking requests and status changes, payment completion, and host/listing reviews.
+
+Studio availability can be checked by date at `GET /api/studios/:id/availability?date=YYYY-MM-DD`. Confirmed bookings block overlapping requests; pending requests do not. Reviews are limited to one per completed booking. Studio location links use OpenStreetMap search from the host-entered location text; they are not precise map pins.
 
 ## Booking API
 

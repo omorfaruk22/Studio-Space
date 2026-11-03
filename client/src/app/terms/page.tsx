@@ -13,11 +13,11 @@ const sections = [
   },
   {
     title: "Listings and booking requests",
-    body: "Hosts are responsible for the accuracy of their listing information, rates, amenities, access instructions, and availability. A request is not confirmed until the host changes its status to Confirmed. StudioSpace does not process payments; users must agree directly with the host about any payment or deposit arrangements.",
+    body: "Hosts are responsible for the accuracy of their listing information, rates, amenities, access instructions, and availability. New and edited listings stay private until an admin approves them. A request is not confirmed until the host changes its status to Confirmed. When SSLCommerz is configured, customers can pay the confirmed rental amount on its hosted checkout page; StudioSpace records a payment only after server-side gateway validation. The displayed security deposit is separate and is not charged by this checkout.",
   },
   {
     title: "Safety and support",
-    body: "StudioSpace does not currently verify host identities, inspect equipment, provide liability insurance, or operate a 24/7 support service. Review the space details and confirm safety, equipment, access, and other important requirements with the host before a session.",
+    body: "Host verification is a manual review of the business information a host submits; it is not government identity verification. StudioSpace does not inspect equipment, provide liability insurance, or operate a 24/7 support service. Review the space details and confirm safety, equipment, access, and other important requirements with the host before a session.",
   },
   {
     title: "Availability and changes",

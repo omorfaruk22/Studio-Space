@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ type BookingDialogButtonProps = {
 };
 
 type BookingResponse = { message?: string };
+type AvailabilityResponse = { booked?: Array<{ startTime: string; endTime: string }>; message?: string };
 
 function localDateString(date: Date): string {
   const year = date.getFullYear();
@@ -46,6 +47,9 @@ export function BookingDialogButton({ studio, isAuthenticated }: BookingDialogBu
   const [startTime, setStartTime] = useState("10:00");
   const [endTime, setEndTime] = useState("11:00");
   const [numberOfPeople, setNumberOfPeople] = useState("1");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [bookedSlots, setBookedSlots] = useState<Array<{ startTime: string; endTime: string }>>([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -57,6 +61,20 @@ export function BookingDialogButton({ studio, isAuthenticated }: BookingDialogBu
   const estimatedTotal = Math.round((studio.hourlyRate * durationMinutes / 60) * 100) / 100;
   const guestCount = Number(numberOfPeople);
 
+  useEffect(() => {
+    if (!open || !bookingDate) return;
+    const controller = new AbortController();
+    void fetch(`/api/studios/${studio.id}/availability?date=${encodeURIComponent(bookingDate)}`, { signal: controller.signal, cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json() as AvailabilityResponse;
+        if (!response.ok) throw new Error(result.message || "Could not load the date availability.");
+        setBookedSlots(Array.isArray(result.booked) ? result.booked : []);
+      })
+      .catch(() => { if (!controller.signal.aborted) setBookedSlots([]); })
+      .finally(() => { if (!controller.signal.aborted) setAvailabilityLoading(false); });
+    return () => controller.abort();
+  }, [bookingDate, open, studio.id]);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -66,6 +84,14 @@ export function BookingDialogButton({ studio, isAuthenticated }: BookingDialogBu
     }
     if (!Number.isInteger(guestCount) || guestCount < 1 || guestCount > studio.maxCapacity) {
       setError(`Choose between 1 and ${studio.maxCapacity} people.`);
+      return;
+    }
+    if (bookedSlots.some((slot) => timeInMinutes(startTime)! < timeInMinutes(slot.endTime)! && timeInMinutes(endTime)! > timeInMinutes(slot.startTime)!)) {
+      setError("That time overlaps a confirmed booking. Choose another time.");
+      return;
+    }
+    if (!/^\+?[\d ()-]{7,30}$/.test(customerPhone.trim())) {
+      setError("Add a valid contact phone number so the host can reach you about the request.");
       return;
     }
 
@@ -81,6 +107,7 @@ export function BookingDialogButton({ studio, isAuthenticated }: BookingDialogBu
           startTime,
           endTime,
           numberOfPeople: guestCount,
+          customerPhone: customerPhone.trim(),
           timeZoneOffsetMinutes: new Date(`${bookingDate}T${startTime}:00`).getTimezoneOffset(),
         }),
       });
@@ -113,6 +140,7 @@ export function BookingDialogButton({ studio, isAuthenticated }: BookingDialogBu
           const localToday = localDateString(new Date());
           setToday(localToday);
           if (!bookingDate || bookingDate < localToday) setBookingDate(localToday);
+          setAvailabilityLoading(true);
           setError("");
           setOpen(true);
         }}
@@ -124,8 +152,9 @@ export function BookingDialogButton({ studio, isAuthenticated }: BookingDialogBu
         <form onSubmit={handleSubmit} aria-busy={submitting} className="space-y-5">
           {error ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{error}</p> : null}
           <FormField label="Booking date" htmlFor="bookingDate" required>
-            <Input id="bookingDate" type="date" required min={today || undefined} value={bookingDate} onChange={(event) => setBookingDate(event.target.value)} />
+            <Input id="bookingDate" type="date" required min={today || undefined} value={bookingDate} onChange={(event) => { setAvailabilityLoading(true); setBookingDate(event.target.value); }} />
           </FormField>
+          <p className="-mt-3 text-xs leading-5 text-muted" role="status">{availabilityLoading ? "Checking confirmed bookings…" : bookedSlots.length > 0 ? `Already confirmed: ${bookedSlots.map((slot) => `${slot.startTime}–${slot.endTime}`).join(", ")}.` : "No confirmed bookings for this date yet."} Pending requests do not block the time until the host confirms.</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label="Start time" htmlFor="startTime" required>
               <Input id="startTime" type="time" required value={startTime} onChange={(event) => setStartTime(event.target.value)} />
@@ -134,6 +163,9 @@ export function BookingDialogButton({ studio, isAuthenticated }: BookingDialogBu
               <Input id="endTime" type="time" required value={endTime} onChange={(event) => setEndTime(event.target.value)} />
             </FormField>
           </div>
+          <FormField label="Contact phone" htmlFor="customerPhone" required hint="Used only for this booking request and its updates.">
+            <Input id="customerPhone" type="tel" autoComplete="tel" required minLength={7} maxLength={30} value={customerPhone} onChange={(event) => setCustomerPhone(event.target.value)} placeholder="+880 1XXX-XXXXXX" />
+          </FormField>
           <FormField label="Number of people" htmlFor="numberOfPeople" required hint={`This studio can host up to ${studio.maxCapacity} people.`}>
             <Input id="numberOfPeople" type="number" required min={1} max={studio.maxCapacity} step={1} value={numberOfPeople} onChange={(event) => setNumberOfPeople(event.target.value)} />
           </FormField>
@@ -145,7 +177,7 @@ export function BookingDialogButton({ studio, isAuthenticated }: BookingDialogBu
               <p className="flex justify-between gap-4"><span>Rate</span><span>${studio.hourlyRate.toFixed(2)} / hr</span></p>
               <p className="flex justify-between gap-4 border-t border-line pt-2"><span>Security deposit (separate)</span><span className="font-semibold text-ink">{studio.securityDeposit > 0 ? `$${studio.securityDeposit.toFixed(2)}` : "None"}</span></p>
             </div>
-            <p className="mt-3 text-xs leading-5 text-muted">The host will review this request. No payment is collected in this phase.</p>
+            <p className="mt-3 text-xs leading-5 text-muted">The host reviews the request first. After confirmation, pay the rental through SSLCommerz. The security deposit is listed separately.</p>
           </div>
 
           <Button type="submit" size="lg" className="w-full" disabled={submitting || !bookingDate || durationMinutes < 1 || !Number.isInteger(guestCount) || guestCount < 1 || guestCount > studio.maxCapacity}>

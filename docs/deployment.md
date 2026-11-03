@@ -31,7 +31,13 @@ Use the actual Vercel origin in both entries. Keep `MONGODB_URI`, `BETTER_AUTH_S
 
 ## Admin access
 
-To grant platform-admin access, add `ADMIN_EMAILS` to the Render API service environment. Set its value to one or more account email addresses separated by commas, then save and redeploy. The email must match the signed-in StudioSpace account. Admins can open `/admin` to review platform totals, recent studio listings, and booking requests, and to hide or show a listing. All admin API endpoints enforce the same server-side allowlist.
+To grant platform-admin access, add `ADMIN_EMAILS` to the Render API service environment. Set its value to one or more account email addresses separated by commas, then save and redeploy. The email must match the signed-in StudioSpace account. Admins can open `/admin` to review platform totals, approve or reject studio listings, review host verification requests, edit listings, and manage bookings. All admin API endpoints enforce the same server-side allowlist.
+
+## Optional payments and email
+
+The SSLCommerz checkout integration starts in sandbox mode. In Render, set `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD`, `SSLCOMMERZ_SANDBOX=true`, and `PUBLIC_API_URL` to the API's public origin. Register `<PUBLIC_API_URL>/api/payments/sslcommerz/ipn` in the merchant IPN settings. Run a sandbox payment and confirm the API validates it before adding production merchant credentials and switching `SSLCOMMERZ_SANDBOX=false`. The application currently prices bookings in USD; confirm the merchant's currency support and conversion display before enabling live checkout.
+
+For booking and moderation notifications, optionally set `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `EMAIL_FROM` in Render. Without these values, email notifications remain disabled; booking and payment records still work.
 
 ## 4. Verify the deployment
 

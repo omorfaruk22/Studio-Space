@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Aperture, ArrowLeft, ArrowRight, Check, MapPin, Star, UsersRound } from "lucide-react";
+import { Aperture, ArrowLeft, ArrowRight, BadgeCheck, Check, ExternalLink, MapPin, Star, UsersRound } from "lucide-react";
 import { BookingDialogButton } from "@/components/bookings/booking-dialog-button";
+import { GuestReviews } from "@/components/studios/guest-reviews";
 import { StudioGallery } from "@/components/studios/studio-gallery";
 import { SectionHeading } from "@/components/ui/section-heading";
 import type { FeaturedStudio } from "@/lib/studio-types";
@@ -15,6 +16,7 @@ type StudioDetails = FeaturedStudio & {
   amenities: string[];
   overview: string;
   host: { name: string };
+  hostVerified: boolean;
 };
 
 const apiUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
@@ -39,7 +41,7 @@ function StudioContent({ studio, isAuthenticated }: { studio: StudioDetails; isA
             {studio.rating > 0 ? <span className="inline-flex items-center gap-1 text-sm font-semibold text-ink"><Star size={15} className="fill-[#d89d49] text-[#d89d49]" aria-hidden="true" />{studio.rating.toFixed(1)} rating</span> : <span className="text-sm text-muted">New listing</span>}
           </div>
           <h1 className="mt-4 font-serif text-3xl leading-tight tracking-tight text-ink sm:text-4xl lg:text-5xl">{studio.title}</h1>
-          <p className="mt-3 flex items-center gap-2 text-sm text-muted sm:text-base"><MapPin size={17} aria-hidden="true" />{studio.location}</p>
+          <p className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted sm:text-base"><MapPin size={17} aria-hidden="true" />{studio.location}<a href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(studio.location)}`} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-1 rounded-full border border-line px-3 text-xs font-semibold text-brand-strong hover:bg-sand"><ExternalLink size={13} aria-hidden="true" />Open map</a></p>
 
           <section className="mt-9 border-b border-line pb-8" aria-label="About this space">
             <SectionHeading title="About this space" />
@@ -55,17 +57,14 @@ function StudioContent({ studio, isAuthenticated }: { studio: StudioDetails; isA
             <SectionHeading title="Meet your host" />
             <div className="mt-5 flex items-center gap-4 rounded-3xl border border-line bg-white p-5">
               <span className="grid size-14 shrink-0 place-items-center rounded-full bg-forest font-serif text-xl text-white">{studio.host.name.trim().charAt(0).toUpperCase()}</span>
-              <div><p className="font-semibold text-ink">{studio.host.name}</p><p className="mt-1 text-sm text-muted">StudioSpace host</p></div>
+              <div><p className="flex flex-wrap items-center gap-1.5 font-semibold text-ink">{studio.host.name}{studio.hostVerified ? <span className="inline-flex items-center gap-1 rounded-full bg-accent-green-soft px-2 py-0.5 text-[11px] font-bold text-accent-green-strong"><BadgeCheck size={13} aria-hidden="true" />Verified host</span> : null}</p><p className="mt-1 text-sm text-muted">StudioSpace host</p></div>
               <Aperture className="ml-auto text-brand-strong" size={22} aria-hidden="true" />
             </div>
           </section>
 
           <section className="py-8" aria-label="Guest reviews">
             <SectionHeading title="Guest reviews" />
-            <div className="mt-5 rounded-3xl border border-dashed border-line bg-white/70 p-6">
-              {studio.rating > 0 ? <p className="inline-flex items-center gap-2 text-sm font-semibold text-ink"><Star size={16} className="fill-[#d89d49] text-[#d89d49]" aria-hidden="true" />Rated {studio.rating.toFixed(1)} out of 5</p> : <p className="font-serif text-xl text-ink">No reviews yet</p>}
-              <p className="mt-2 text-sm leading-6 text-muted">Reviews will appear here as creators share their experience with this space.</p>
-            </div>
+            <GuestReviews studioId={studio.id} isAuthenticated={isAuthenticated} />
           </section>
         </div>
 

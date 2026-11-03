@@ -18,6 +18,16 @@ export const env = {
   googleClientId: process.env.GOOGLE_CLIENT_ID,
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
   imgbbApiKey: process.env.IMGBB_API_KEY,
+  publicApiUrl: (process.env.PUBLIC_API_URL ?? `http://localhost:${port}`).replace(/\/$/, ""),
+  sslCommerzStoreId: process.env.SSLCOMMERZ_STORE_ID,
+  sslCommerzStorePassword: process.env.SSLCOMMERZ_STORE_PASSWORD,
+  sslCommerzSandbox: process.env.SSLCOMMERZ_SANDBOX !== "false",
+  smtpHost: process.env.SMTP_HOST,
+  smtpPort: Number(process.env.SMTP_PORT ?? 587),
+  smtpSecure: process.env.SMTP_SECURE === "true",
+  smtpUser: process.env.SMTP_USER,
+  smtpPassword: process.env.SMTP_PASSWORD,
+  emailFrom: process.env.EMAIL_FROM,
   adminEmails: (process.env.ADMIN_EMAILS ?? "")
     .split(",")
     .map((email) => email.trim().toLowerCase())

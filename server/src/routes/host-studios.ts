@@ -114,6 +114,8 @@ export function serializeStudio(studio: {
   amenities: string[];
   overview: string;
   isAvailable: boolean;
+  moderationStatus?: string;
+  moderationNote?: string;
   ownerName: string;
   ownerEmail: string;
   createdAt?: Date;
@@ -132,6 +134,8 @@ export function serializeStudio(studio: {
     amenities: studio.amenities ?? [],
     overview: studio.overview,
     isAvailable: studio.isAvailable,
+    moderationStatus: studio.moderationStatus ?? "approved",
+    moderationNote: studio.moderationNote ?? "",
     ownerName: studio.ownerName,
     ownerEmail: studio.ownerEmail,
     createdAt: studio.createdAt?.toISOString(),
@@ -184,6 +188,7 @@ hostStudiosRouter.post("/host/studios", async (request, response, next) => {
       ownerId: session.user.id,
       ownerName: session.user.name,
       ownerEmail: session.user.email,
+      moderationStatus: "pending",
       isAvailable: true,
     });
 
@@ -240,7 +245,7 @@ hostStudiosRouter.patch("/host/studios/:id", async (request, response, next) => 
     const session = response.locals.authSession as { user: { id: string } };
     const studio = await Studio.findOneAndUpdate(
       { _id: request.params.id, ownerId: session.user.id },
-      { $set: parsed.input },
+      { $set: { ...parsed.input, moderationStatus: "pending", moderationNote: "" } },
       { new: true, runValidators: true },
     ).lean();
 

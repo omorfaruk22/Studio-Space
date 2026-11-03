@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Pencil, RefreshCw, Search, ShieldCheck } from "lucide-react";
+import { Check, Eye, EyeOff, Pencil, RefreshCw, Search, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +20,20 @@ type AdminStudio = {
   ownerName: string;
   ownerEmail: string;
   isAvailable: boolean;
+  moderationStatus: "pending" | "approved" | "rejected";
+  moderationNote?: string;
+  createdAt?: string;
+};
+
+type HostVerificationRequest = {
+  id: string;
+  name: string;
+  email: string;
+  businessName?: string;
+  website?: string;
+  message: string;
+  status: "pending" | "approved" | "rejected";
+  adminNote?: string;
   createdAt?: string;
 };
 
@@ -32,6 +46,10 @@ type AdminBooking = {
   endTime: string;
   numberOfPeople: number;
   totalPrice: number;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  paymentStatus?: string;
   status: BookingStatus;
   createdAt?: string;
 };
@@ -44,8 +62,10 @@ type AdminOverview = {
     bookingCount: number;
     pendingBookingCount: number;
     confirmedBookingCount: number;
+    pendingModerationCount: number;
   };
   studios: AdminStudio[];
+  verificationRequests: HostVerificationRequest[];
   bookings: AdminBooking[];
 };
 
@@ -61,7 +81,7 @@ async function fetchAdminOverview(): Promise<AdminOverview> {
     if (response.status === 401) throw new Error("Your login session expired. Log in again to continue.");
     throw new Error(result.message || "Could not load the admin dashboard.");
   }
-  return result as AdminOverview;
+  return { ...result, verificationRequests: result.verificationRequests ?? [] } as AdminOverview;
 }
 
 function displayDate(value?: string): string {
@@ -75,6 +95,9 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyStudioId, setBusyStudioId] = useState("");
+  const [busyVerificationId, setBusyVerificationId] = useState("");
+  const [moderationNotes, setModerationNotes] = useState<Record<string, string>>({});
+  const [verificationNotes, setVerificationNotes] = useState<Record<string, string>>({});
   const [bookingStatusDrafts, setBookingStatusDrafts] = useState<Record<string, BookingStatus>>({});
   const [savingBookingId, setSavingBookingId] = useState("");
   const [studioSearch, setStudioSearch] = useState("");
@@ -129,13 +152,16 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
       const result = (await response.json()) as { studio?: { id: string; isAvailable: boolean }; message?: string };
       if (!response.ok || !result.studio) throw new Error(result.message || "Could not update this studio.");
       const isAvailable = result.studio.isAvailable;
+      const wasPublic = studio.isAvailable && studio.moderationStatus === "approved";
+      const isPublic = isAvailable && studio.moderationStatus === "approved";
+      const publicDelta = Number(isPublic) - Number(wasPublic);
       setOverview((current) => current ? {
         ...current,
         studios: current.studios.map((item) => item.id === studio.id ? { ...item, isAvailable } : item),
         stats: {
           ...current.stats,
-          liveStudioCount: current.stats.liveStudioCount + (isAvailable ? 1 : -1),
-          hiddenStudioCount: current.stats.hiddenStudioCount + (isAvailable ? -1 : 1),
+          liveStudioCount: current.stats.liveStudioCount + publicDelta,
+          hiddenStudioCount: current.stats.hiddenStudioCount - publicDelta,
         },
       } : current);
       toast.success(isAvailable ? "Studio is visible in search." : "Studio is hidden from search.");
@@ -143,6 +169,61 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
       toast.error(cause instanceof Error ? cause.message : "Could not update this studio.");
     } finally {
       setBusyStudioId("");
+    }
+  }
+
+  async function moderateStudio(studio: AdminStudio, status: "approved" | "rejected") {
+    setBusyStudioId(studio.id);
+    try {
+      const response = await fetch(`/api/admin/studios/${studio.id}/moderation`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ status, note: moderationNotes[studio.id] ?? "" }),
+      });
+      const result = await response.json() as { studio?: { moderationStatus: AdminStudio["moderationStatus"] }; message?: string };
+      if (!response.ok || !result.studio) throw new Error(result.message || "Could not review this listing.");
+      const wasPublic = studio.isAvailable && studio.moderationStatus === "approved";
+      const isPublic = studio.isAvailable && result.studio.moderationStatus === "approved";
+      const publicDelta = Number(isPublic) - Number(wasPublic);
+      setOverview((current) => current ? {
+        ...current,
+        studios: current.studios.map((item) => item.id === studio.id ? { ...item, moderationStatus: result.studio!.moderationStatus, moderationNote: moderationNotes[studio.id] ?? "" } : item),
+        stats: {
+          ...current.stats,
+          pendingModerationCount: Math.max(0, current.stats.pendingModerationCount - Number(studio.moderationStatus === "pending")),
+          liveStudioCount: current.stats.liveStudioCount + publicDelta,
+          hiddenStudioCount: current.stats.hiddenStudioCount - publicDelta,
+        },
+      } : current);
+      toast.success(status === "approved" ? "Listing approved and available to the public." : "Listing rejected and kept private.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Could not review this listing.");
+    } finally {
+      setBusyStudioId("");
+    }
+  }
+
+  async function reviewHost(request: HostVerificationRequest, status: "approved" | "rejected") {
+    setBusyVerificationId(request.id);
+    try {
+      const response = await fetch(`/api/admin/host-verifications/${request.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ status, adminNote: verificationNotes[request.id] ?? "" }),
+      });
+      const result = await response.json() as { verification?: { status: HostVerificationRequest["status"] }; message?: string };
+      if (!response.ok || !result.verification) throw new Error(result.message || "Could not update host verification.");
+      setOverview((current) => current ? {
+        ...current,
+        verificationRequests: current.verificationRequests.map((item) => item.id === request.id ? { ...item, status: result.verification!.status, adminNote: verificationNotes[request.id] ?? "" } : item),
+      } : current);
+      toast.success(status === "approved" ? "Host verification approved." : "Host verification declined.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Could not update host verification.");
+    } finally {
+      setBusyVerificationId("");
     }
   }
 
@@ -206,6 +287,7 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     { label: "All bookings", value: stats?.bookingCount ?? 0 },
     { label: "Pending bookings", value: stats?.pendingBookingCount ?? 0 },
     { label: "Confirmed bookings", value: stats?.confirmedBookingCount ?? 0 },
+    { label: "Listings awaiting review", value: stats?.pendingModerationCount ?? 0 },
   ];
 
   return (
@@ -240,6 +322,19 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
         ))}
       </section>
 
+      <section aria-labelledby="admin-host-review-heading">
+        <div className="mb-4"><p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">Trust and safety</p><h2 id="admin-host-review-heading" className="mt-2 font-serif text-3xl text-ink">Host verification requests</h2><p className="mt-2 text-sm text-muted">Review the public business details hosts provide. Do not request government ID uploads in this form.</p></div>
+        {loading ? <Card><CardContent className="p-6 text-sm text-muted">Loading host requests…</CardContent></Card> : null}
+        {!loading && (overview?.verificationRequests.length ?? 0) === 0 ? <Card><CardContent className="p-6 text-sm text-muted">No host verification requests yet.</CardContent></Card> : null}
+        {!loading && overview?.verificationRequests.map((request) => (
+          <Card key={request.id} className="mb-3"><CardContent className="p-5 sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold text-ink">{request.businessName || request.name}</h3><span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${request.status === "pending" ? "bg-accent-yellow-soft text-accent-yellow-strong" : request.status === "approved" ? "bg-accent-green-soft text-accent-green-strong" : "bg-red-50 text-red-800"}`}>{request.status}</span></div><p className="mt-1 text-sm text-muted">{request.name} · {request.email}</p>{request.website ? <a href={request.website} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center text-sm text-brand-strong underline">{request.website}</a> : null}<p className="mt-3 whitespace-pre-line text-sm leading-6 text-ink">{request.message}</p><p className="mt-2 text-xs text-muted">Submitted {displayDate(request.createdAt)}</p></div>
+              {request.status === "pending" ? <div className="w-full shrink-0 space-y-2 sm:max-w-xs"><label htmlFor={`host-verification-note-${request.id}`} className="sr-only">Optional note to {request.name}</label><Input id={`host-verification-note-${request.id}`} maxLength={500} value={verificationNotes[request.id] ?? ""} onChange={(event) => setVerificationNotes((current) => ({ ...current, [request.id]: event.target.value }))} placeholder="Optional note (max 500 chars)" /><div className="flex gap-2"><Button type="button" size="sm" onClick={() => void reviewHost(request, "approved")} disabled={busyVerificationId === request.id}>{busyVerificationId === request.id ? <Spinner className="size-4" label="Saving host review" /> : <Check size={15} aria-hidden="true" />}Approve</Button><Button type="button" size="sm" variant="outline" onClick={() => void reviewHost(request, "rejected")} disabled={busyVerificationId === request.id}>{busyVerificationId === request.id ? null : <X size={15} aria-hidden="true" />}Decline</Button></div></div> : request.adminNote ? <p className="text-sm text-muted sm:max-w-xs"><span className="font-semibold">Admin note: </span>{request.adminNote}</p> : null}
+            </div>
+          </CardContent></Card>
+        ))}
+      </section>
+
       <section aria-labelledby="admin-studios-heading">
         <div className="mb-4">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-brand-strong">Moderation</p>
@@ -270,16 +365,21 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-serif text-xl text-ink">{studio.title}</h3>
-                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${studio.isAvailable ? "bg-emerald-50 text-emerald-800" : "bg-sand text-muted"}`}>{studio.isAvailable ? "Visible" : "Hidden"}</span>
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${studio.moderationStatus === "pending" ? "bg-accent-yellow-soft text-accent-yellow-strong" : studio.moderationStatus === "rejected" ? "bg-red-50 text-red-800" : studio.isAvailable ? "bg-accent-green-soft text-accent-green-strong" : "bg-sand text-muted"}`}>{studio.moderationStatus === "pending" ? "Pending review" : studio.moderationStatus === "rejected" ? "Rejected" : studio.isAvailable ? "Visible" : "Hidden"}</span>
                     </div>
                     <p className="mt-2 text-sm text-muted">{studioCategoryLabels[studio.category]} · {studio.location}</p>
                     <p className="mt-1 text-sm text-muted">Host: {studio.ownerName} · {studio.ownerEmail}</p>
                     <p className="mt-1 text-xs text-muted">${studio.hourlyRate} / hour · Added {displayDate(studio.createdAt)}</p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-64">
                     <Link href={`/admin/studios/${studio.id}/edit`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-brand hover:text-brand-strong">
                       <Pencil size={15} aria-hidden="true" /> Edit listing
                     </Link>
+                    {studio.moderationStatus === "pending" ? <>
+                      <label htmlFor={`moderation-note-${studio.id}`} className="sr-only">Optional moderation note for {studio.title}</label>
+                      <Input id={`moderation-note-${studio.id}`} maxLength={500} value={moderationNotes[studio.id] ?? ""} onChange={(event) => setModerationNotes((current) => ({ ...current, [studio.id]: event.target.value }))} placeholder="Optional note for the host" />
+                      <div className="flex flex-wrap gap-2"><Button type="button" onClick={() => void moderateStudio(studio, "approved")} disabled={busyStudioId === studio.id}>{busyStudioId === studio.id ? <Spinner className="size-4" label="Saving listing review" /> : <Check size={15} aria-hidden="true" />}Approve listing</Button><Button type="button" variant="outline" onClick={() => void moderateStudio(studio, "rejected")} disabled={busyStudioId === studio.id}>{busyStudioId === studio.id ? null : <X size={15} aria-hidden="true" />}Reject</Button></div>
+                    </> : null}
                     <Button type="button" variant="outline" onClick={() => void toggleStudio(studio)} disabled={busyStudioId === studio.id}>
                       {busyStudioId === studio.id ? <Spinner className="size-4" label="Updating studio visibility" /> : studio.isAvailable ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
                       {busyStudioId === studio.id ? "Saving…" : studio.isAvailable ? "Hide listing" : "Show listing"}
@@ -322,6 +422,8 @@ export function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                     <h3 className="font-semibold text-ink">{booking.studioTitle}</h3>
                     <p className="mt-1 text-sm text-muted">{booking.studioLocation} · {booking.bookingDate} · {booking.startTime}–{booking.endTime}</p>
                     <p className="mt-1 text-sm text-muted">{booking.numberOfPeople} people · ${booking.totalPrice.toFixed(2)}</p>
+                    {booking.customerName || booking.customerEmail || booking.customerPhone ? <p className="mt-1 text-xs leading-5 text-muted">Customer: {booking.customerName || "—"}{booking.customerEmail ? <> · <a className="underline" href={`mailto:${booking.customerEmail}`}>{booking.customerEmail}</a></> : null}{booking.customerPhone ? <> · <a className="underline" href={`tel:${booking.customerPhone}`}>{booking.customerPhone}</a></> : null}</p> : null}
+                    <p className="mt-1 text-xs text-muted">Payment: {booking.paymentStatus ?? "unpaid"}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <label htmlFor={`booking-status-${booking.id}`} className="sr-only">Status for {booking.studioTitle} booking</label>

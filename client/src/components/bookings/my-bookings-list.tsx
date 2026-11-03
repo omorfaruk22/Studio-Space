@@ -22,6 +22,8 @@ type Booking = {
   hourlyRate: number;
   totalPrice: number;
   securityDeposit: number;
+  paymentStatus?: "unpaid" | "pending" | "paid" | "failed" | "cancelled" | "review";
+  reviewSubmitted?: boolean;
   status: BookingStatus;
 };
 
@@ -69,6 +71,7 @@ export function MyBookingsList() {
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [invoiceBookingId, setInvoiceBookingId] = useState("");
+  const [payingBookingId, setPayingBookingId] = useState("");
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
@@ -83,6 +86,20 @@ export function MyBookingsList() {
   }, []);
 
   useEffect(() => {
+    const paymentResult = new URLSearchParams(window.location.search).get("payment");
+    if (paymentResult === "success") toast.success("Payment validated and recorded.");
+    if (paymentResult === "failed") toast.error("Payment was not completed. You can try again.");
+    if (paymentResult === "cancelled") toast.info("Payment was cancelled.");
+    if (paymentResult === "verification-required") toast.error("The gateway has not verified this payment yet. Refresh later or contact support if money was charged.");
+    if (paymentResult) {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete("payment");
+      cleanUrl.searchParams.delete("booking");
+      window.history.replaceState({}, "", cleanUrl.toString());
+    }
+  }, []);
+
+  useEffect(() => {
     let active = true;
     void fetchBookings()
       .then((items) => { if (active) setBookings(items); })
@@ -92,6 +109,28 @@ export function MyBookingsList() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
+
+  async function payForBooking(booking: Booking) {
+    setPayingBookingId(booking.id);
+    try {
+      const response = await fetch("/api/payments/sslcommerz/initiate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ bookingId: booking.id }),
+      });
+      const result = await response.json() as { gatewayUrl?: string; message?: string };
+      if (!response.ok || !result.gatewayUrl) throw new Error(result.message || "Could not start SSLCommerz checkout.");
+      const gateway = new URL(result.gatewayUrl);
+      if (gateway.protocol !== "https:" || !["sandbox.sslcommerz.com", "securepay.sslcommerz.com"].includes(gateway.hostname)) {
+        throw new Error("The payment gateway returned an unsafe checkout address.");
+      }
+      window.location.assign(gateway.toString());
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Could not start payment.");
+      setPayingBookingId("");
+    }
+  }
 
   async function cancelBooking() {
     if (!cancelTarget) return;
@@ -161,8 +200,10 @@ export function MyBookingsList() {
                   <p className="flex items-center gap-2 text-ink"><UsersRound size={15} className="text-muted" aria-hidden="true" />{booking.numberOfPeople} {booking.numberOfPeople === 1 ? "person" : "people"}</p>
                 </div>
                 <div className="mt-4 flex flex-wrap items-end justify-between gap-4 border-t border-line pt-4">
-                  <div><p className="text-xs text-muted">Rental total</p><p className="mt-1 font-semibold text-ink">{money(booking.totalPrice)}</p><p className="mt-1 text-xs text-muted">Deposit: {booking.securityDeposit ? money(booking.securityDeposit) : "None"}</p></div>
+                  <div><p className="text-xs text-muted">Rental total</p><p className="mt-1 font-semibold text-ink">{money(booking.totalPrice)}</p><p className="mt-1 text-xs text-muted">Deposit: {booking.securityDeposit ? money(booking.securityDeposit) : "None"}</p><p className="mt-1 text-xs font-semibold text-muted">Payment: {booking.paymentStatus === "paid" ? "Paid" : booking.paymentStatus === "pending" ? "Processing" : booking.paymentStatus === "review" ? "Held for payment review" : booking.paymentStatus === "failed" ? "Failed" : booking.paymentStatus === "cancelled" ? "Cancelled" : "Unpaid"}</p></div>
                   <div className="flex flex-wrap justify-end gap-2">
+                    {booking.status === "Confirmed" && booking.paymentStatus !== "paid" && booking.paymentStatus !== "review" ? <button type="button" onClick={() => void payForBooking(booking)} disabled={payingBookingId === booking.id} className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-brand px-3.5 text-xs font-semibold text-white hover:bg-brand-strong disabled:cursor-wait disabled:opacity-50">{payingBookingId === booking.id ? <Spinner className="size-3.5" label="Opening secure checkout" /> : null}{payingBookingId === booking.id ? "Opening…" : booking.paymentStatus === "pending" ? "Resume payment" : "Pay rental"}</button> : null}
+                    {booking.status === "Confirmed" && booking.paymentStatus === "review" ? <span className="max-w-48 text-right text-xs text-muted">Please contact support before trying to pay again.</span> : null}
                     {booking.status === "Confirmed" ? <button type="button" onClick={() => void downloadInvoice(booking)} disabled={invoiceBookingId === booking.id} className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line px-3.5 text-xs font-semibold text-ink hover:bg-sand disabled:cursor-wait disabled:opacity-50">{invoiceBookingId === booking.id ? <Spinner className="size-3.5" label="Downloading booking PDF" /> : <Download size={14} aria-hidden="true" />}{invoiceBookingId === booking.id ? "Preparing PDF…" : "Download PDF"}</button> : null}
                     {booking.status === "Pending" ? <button type="button" onClick={() => setCancelTarget(booking)} className="min-h-9 rounded-full border border-line px-3.5 text-xs font-semibold text-ink hover:bg-sand">Cancel request</button> : null}
                   </div>

@@ -19,6 +19,9 @@ type Booking = {
   durationMinutes: number;
   totalPrice: number;
   securityDeposit: number;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   status: BookingStatus;
 };
 
@@ -124,6 +127,7 @@ export function HostBookingRequests() {
                 <p className="flex items-center gap-2 text-ink"><CalendarDays size={15} className="text-muted" aria-hidden="true" />{formatDate(booking.bookingDate)}</p>
                 <p className="flex items-center gap-2 text-ink"><Clock3 size={15} className="text-muted" aria-hidden="true" />{formatTime(booking.startTime)}–{formatTime(booking.endTime)} ({formatDuration(booking.durationMinutes)})</p>
                 <p className="flex items-center gap-2 text-ink"><UsersRound size={15} className="text-muted" aria-hidden="true" />{booking.numberOfPeople} {booking.numberOfPeople === 1 ? "person" : "people"}</p>
+                {booking.customerName || booking.customerEmail || booking.customerPhone ? <div className="rounded-xl bg-sand/70 px-3 py-2 text-xs leading-5 text-muted"><p className="font-semibold text-ink">Customer contact</p>{booking.customerName ? <p>{booking.customerName}</p> : null}{booking.customerEmail ? <a className="underline" href={`mailto:${booking.customerEmail}`}>{booking.customerEmail}</a> : null}{booking.customerPhone ? <p><a className="underline" href={`tel:${booking.customerPhone}`}>{booking.customerPhone}</a></p> : null}</div> : null}
               </div>
               <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-line pt-4">
                 <div><p className="text-xs text-muted">Rental total</p><p className="mt-1 font-semibold text-ink">{money(booking.totalPrice)}</p><p className="mt-1 text-xs text-muted">Deposit: {booking.securityDeposit ? money(booking.securityDeposit) : "None"}</p></div>

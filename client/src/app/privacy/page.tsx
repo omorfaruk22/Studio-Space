@@ -13,11 +13,11 @@ const sections = [
   },
   {
     title: "Listings and bookings",
-    body: "Studio listings and booking requests are stored in MongoDB Atlas. A listing displays the host name and the space information needed for discovery. Booking records include the selected date and time, guest count, price summary, and status. StudioSpace does not collect payment-card details or process payments.",
+    body: "Studio listings and booking requests are stored in MongoDB Atlas. A listing displays the host name and space information needed for discovery. Booking records include the selected date and time, guest count, price summary, status, and the contact phone number a guest provides. That phone number and the account contact details needed to coordinate a request are shared with the listing host. When checkout is configured, SSLCommerz handles the hosted payment page; StudioSpace stores the transaction reference and payment status, not card numbers or bank credentials. The checkout currently charges the rental amount; a displayed security deposit is separate.",
   },
   {
     title: "Saved spaces, images, and updates list",
-    body: "Saved studios are associated with your account. If image uploads are enabled, uploaded studio images are hosted by ImgBB. The footer updates form stores the email address you submit in MongoDB; email updates are not sent yet.",
+    body: "Saved studios are associated with your account. If image uploads are enabled, uploaded studio images are hosted by ImgBB. Host verification requests store the business details, website, and explanation the host submits for manual review; the form does not request identity-document uploads. The footer updates form stores the email address you submit in MongoDB; newsletter campaigns are not connected. Booking and moderation emails are sent through SMTP only after the service owner configures an email provider.",
   },
   {
     title: "Browser storage and your choices",

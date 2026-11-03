@@ -77,5 +77,11 @@ Record the date, deployment commit, smoke check result, manual checklist result,
 - Isolated end-to-end API check: **63 checks passed** against a newly named temporary Atlas database. The run covered registration, sign-in/out, studio create/edit/hide/show/delete, discovery filters, ownership checks, saved studios, booking creation/cancellation/confirmation/decline, capacity and date validation, adjacent and overlapping bookings, concurrent confirmations, PDF generation, and newsletter idempotency. The temporary database and its test records were dropped after the run; production records were not changed.
 - Responsive spot-check: **390 × 844 px** on home, mobile navigation, discovery, login, registration, add-studio, dashboard, customer bookings, host booking requests, and saved studios. The layouts fit the mobile viewport; the temporary viewport override was reset.
 - Local client production build compiled and completed TypeScript checking, then failed during `/dashboard` prerender because Windows returned `EPERM` while Next.js created a generated `.next` directory. Production home and discovery routes were reachable; rerun the full build in Vercel’s build environment to clear this local-only verification gap.
-- Production currently has zero public studios, so live listing and booking flows still need a staging listing or owner-approved test records before they can be exercised against the deployed database.
-- Operational integrations still require owner setup if they are part of the launch scope: a mailing-list delivery provider and real identity/safety/support services. Confirm the ImgBB API key in Render before accepting file-upload tests. The site currently explains that newsletter campaigns are not sent and does not claim verification, insurance, or 24/7 support.
+- At the time of the 2026-11-02 production check, there were zero public studios, so live listing and booking flows still needed a staging listing or owner-approved test records.
+- At that time, operational integrations still needed owner setup: mailing-list delivery and ImgBB for uploads. The site did not claim identity verification, insurance, or 24/7 support.
+
+## Implementation update — 2026-11-03
+
+- Added studio moderation, host verification requests, booking availability, completed-booking reviews, OpenStreetMap search links, SSLCommerz hosted checkout, and optional SMTP notifications.
+- Local checks for this update: server TypeScript typecheck/build and client lint/build passed.
+- A live SSLCommerz sandbox transaction and actual email delivery still require merchant and SMTP credentials in Render, plus the registered SSLCommerz IPN URL. Those provider checks are not claimed as completed.

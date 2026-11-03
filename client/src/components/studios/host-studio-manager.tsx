@@ -63,7 +63,9 @@ export function HostStudioManager() {
       const result = (await response.json()) as { studio?: HostStudio; message?: string };
       if (!response.ok || !result.studio) throw new Error(result.message || "Could not update this listing.");
       setStudios((current) => current.map((item) => item.id === studio.id ? result.studio! : item));
-      toast.success(result.studio.isAvailable ? "Studio listing is live." : "Studio listing is hidden from search.");
+      toast.success(result.studio.isAvailable
+        ? result.studio.moderationStatus === "approved" ? "Studio listing is live." : "Availability saved. The listing will appear after admin approval."
+        : "Studio listing is hidden from search.");
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "Could not update this listing.");
     } finally {
@@ -115,13 +117,15 @@ export function HostStudioManager() {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="truncate font-serif text-xl text-ink">{studio.title}</h3>
-                  <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${studio.isAvailable ? "bg-emerald-50 text-emerald-800" : "bg-sand text-muted"}`}>{studio.isAvailable ? "Live" : "Hidden"}</span>
+                  <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${studio.moderationStatus === "pending" ? "bg-accent-yellow-soft text-accent-yellow-strong" : studio.moderationStatus === "rejected" ? "bg-red-50 text-red-800" : studio.isAvailable ? "bg-accent-green-soft text-accent-green-strong" : "bg-sand text-muted"}`}>{studio.moderationStatus === "pending" ? "Pending review" : studio.moderationStatus === "rejected" ? "Changes requested" : studio.isAvailable ? "Live" : "Hidden"}</span>
                 </div>
                 <p className="mt-2 text-sm text-muted">{studioCategoryLabels[studio.category]} · {studio.location}</p>
                 <p className="mt-1 text-sm font-semibold text-ink">${studio.hourlyRate} / hour</p>
+                {studio.moderationStatus === "pending" ? <p className="mt-2 text-xs leading-5 text-muted">This listing is private while an admin reviews it.</p> : null}
+                {studio.moderationStatus === "rejected" && studio.moderationNote ? <p className="mt-2 text-xs leading-5 text-red-800">Admin note: {studio.moderationNote}</p> : null}
               </div>
               <div className="flex shrink-0 flex-wrap gap-2">
-                {studio.isAvailable ? <Link href={`/studios/${studio.id}`} aria-label={`View ${studio.title}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-ink hover:bg-sand"><Eye size={15} aria-hidden="true" /> View</Link> : null}
+                {studio.isAvailable && studio.moderationStatus === "approved" ? <Link href={`/studios/${studio.id}`} aria-label={`View ${studio.title}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-ink hover:bg-sand"><Eye size={15} aria-hidden="true" /> View</Link> : null}
                 <Link href={`/studios/edit/${studio.id}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-ink hover:bg-sand"><Pencil size={15} aria-hidden="true" /> Edit</Link>
                 <button type="button" onClick={() => void setAvailability(studio)} disabled={busyId === studio.id} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-3.5 text-sm font-semibold text-muted hover:bg-sand disabled:cursor-wait disabled:opacity-50">{busyId === studio.id ? <Spinner className="size-4" label="Updating listing" /> : null}{busyId === studio.id ? "Saving…" : studio.isAvailable ? "Hide" : "Publish"}</button>
                 <button type="button" onClick={() => setDeleteTarget(studio)} disabled={busyId === studio.id} className="inline-flex min-h-10 items-center rounded-full border border-red-200 px-3.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">Delete</button>

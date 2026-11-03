@@ -11,11 +11,13 @@ import { adminRouter } from "./routes/admin.js";
 import { bookingsRouter } from "./routes/bookings.js";
 import { healthRouter } from "./routes/health.js";
 import { hostStudiosRouter } from "./routes/host-studios.js";
+import { hostVerificationRouter } from "./routes/host-verification.js";
 import { imageUploadsRouter } from "./routes/image-uploads.js";
 import { newsletterRouter } from "./routes/newsletter.js";
 import { savedStudiosRouter } from "./routes/saved-studios.js";
 import { studioDetailsRouter } from "./routes/studio-details.js";
 import { studiosRouter } from "./routes/studios.js";
+import { paymentsRouter } from "./routes/payments.js";
 
 export const app = express();
 
@@ -40,12 +42,15 @@ app.get("/api/session", async (request, response, next) => {
 });
 
 app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false, limit: "64kb" }));
 app.use("/api", healthRouter);
 app.use("/api", accountRouter);
 app.use("/api", adminRouter);
 app.use("/api", bookingsRouter);
+app.use("/api", paymentsRouter);
 app.use("/api", studiosRouter);
 app.use("/api", hostStudiosRouter);
+app.use("/api", hostVerificationRouter);
 app.use("/api", imageUploadsRouter);
 app.use("/api", newsletterRouter);
 app.use("/api", savedStudiosRouter);

@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ArrowRight, Aperture } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { HostStudioManager } from "@/components/studios/host-studio-manager";
+import { HostVerificationPanel } from "@/components/studios/host-verification-panel";
 import { getCurrentSession } from "@/lib/server-session";
 
 export default async function DashboardPage() {
@@ -46,6 +47,7 @@ async function DashboardContent() {
           </CardContent>
         </Card>
       </div>
+      <HostVerificationPanel />
       <HostStudioManager />
     </>
   );

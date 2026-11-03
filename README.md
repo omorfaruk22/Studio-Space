@@ -10,10 +10,13 @@ StudioSpace is a peer-to-peer marketplace for finding and sharing creative works
 
 ## Features
 
-- Responsive home page and studio discovery with search, location, category, price, and sort filters.
+- Responsive home page and studio discovery with search, location, category, price, capacity, amenity, map-link, and sort filters.
 - Email/password and Google sign-in, session-aware pages, and protected host/customer areas.
-- Studio detail pages, image galleries, and host listing create/edit/availability/delete controls.
-- Booking requests, customer cancellation, host confirm/decline, and protection against overlapping confirmed bookings.
+- Studio detail pages, image galleries, reviews from completed bookings, and host listing create/edit/availability/delete controls.
+- Admin approval for new and edited listings, plus manual host verification requests and public verified-host badges.
+- Booking requests, date availability, customer cancellation, host confirm/decline, and protection against overlapping confirmed bookings.
+- SSLCommerz hosted checkout with server-side transaction validation; sandbox merchant credentials are required before checkout can run.
+- SMTP notification wiring for booking, payment, and moderation events; email delivery remains disabled until SMTP settings are supplied.
 - Saved studio wishlists and downloadable PDF summaries for confirmed bookings.
 - Light/dark theme toggle and loading, empty, and error states.
 - Newsletter interest is persisted in MongoDB; email campaigns are not connected yet.

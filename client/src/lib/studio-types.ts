@@ -8,6 +8,8 @@ export type FeaturedStudio = {
   location: string;
   image: string;
   rating: number;
+  maxCapacity: number;
+  amenities?: string[];
   createdAt?: string;
 };
 
@@ -20,6 +22,8 @@ export type HostStudio = FeaturedStudio & {
   isAvailable: boolean;
   ownerName: string;
   ownerEmail: string;
+  moderationStatus: "pending" | "approved" | "rejected";
+  moderationNote?: string;
   updatedAt?: string;
 };
 

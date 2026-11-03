@@ -5,7 +5,10 @@ import { env } from "../config/env.js";
 import { requireAdmin } from "../middleware/requireAdmin.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { Booking } from "../models/Booking.js";
+import { HostVerification } from "../models/HostVerification.js";
 import { Studio } from "../models/Studio.js";
+import { notifyInBackground } from "../lib/email.js";
+import { publicStudioFilter } from "../lib/studio-visibility.js";
 import { parseStudioInput, serializeStudio } from "./host-studios.js";
 
 export const adminRouter = Router();
@@ -32,35 +35,51 @@ adminRouter.get("/admin/overview", async (_request, response, next) => {
     }
 
     const [
-      studioCount,
+      totalStudioCount,
       liveStudioCount,
-      hiddenStudioCount,
       bookingCount,
       pendingBookingCount,
       confirmedBookingCount,
+      pendingModerationCount,
       recentStudios,
       recentBookings,
+      verificationRequests,
     ] = await Promise.all([
       Studio.countDocuments(),
-      Studio.countDocuments({ isAvailable: true }),
-      Studio.countDocuments({ isAvailable: false }),
+      Studio.countDocuments({ ...publicStudioFilter }),
       Booking.countDocuments(),
       Booking.countDocuments({ status: "Pending" }),
       Booking.countDocuments({ status: "Confirmed" }),
+      Studio.countDocuments({ moderationStatus: "pending" }),
       Studio.find().sort({ createdAt: -1 }).lean(),
       Booking.find().sort({ createdAt: -1 }).lean(),
+      HostVerification.find().sort({ updatedAt: -1 }).lean(),
     ]);
 
+    const publicCount = liveStudioCount;
     response.json({
       stats: {
-        studioCount,
+        studioCount: totalStudioCount,
         liveStudioCount,
-        hiddenStudioCount,
+        hiddenStudioCount: Math.max(0, totalStudioCount - publicCount),
         bookingCount,
         pendingBookingCount,
         confirmedBookingCount,
+        pendingModerationCount,
       },
       studios: recentStudios.map(serializeStudio),
+      verificationRequests: verificationRequests.map((request) => ({
+        id: String(request._id),
+        userId: request.userId,
+        name: request.name,
+        email: request.email,
+        businessName: request.businessName,
+        website: request.website,
+        message: request.message,
+        status: request.status,
+        adminNote: request.adminNote,
+        createdAt: request.createdAt?.toISOString(),
+      })),
       bookings: recentBookings.map((booking) => ({
         id: String(booking._id),
         studioId: String(booking.studioId),
@@ -71,10 +90,91 @@ adminRouter.get("/admin/overview", async (_request, response, next) => {
         endTime: booking.endTime,
         numberOfPeople: booking.numberOfPeople,
         totalPrice: booking.totalPrice,
+        customerName: booking.customerName ?? "",
+        customerEmail: booking.customerEmail ?? "",
+        customerPhone: booking.customerPhone ?? "",
+        paymentStatus: booking.paymentStatus ?? "unpaid",
         status: booking.status,
         createdAt: booking.createdAt?.toISOString(),
       })),
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.patch("/admin/studios/:id/moderation", async (request, response, next) => {
+  try {
+    if (!mongoose.isValidObjectId(request.params.id)
+      || !["approved", "rejected"].includes(request.body?.status)
+      || (request.body?.note !== undefined && (typeof request.body.note !== "string" || request.body.note.length > 500))) {
+      response.status(400).json({ status: "error", message: "Choose an approval state and a note under 500 characters." });
+      return;
+    }
+    const database = await connectDatabase();
+    if (!database) {
+      response.status(503).json({ status: "error", message: "Studio moderation is temporarily unavailable." });
+      return;
+    }
+    const status = request.body.status as "approved" | "rejected";
+    const studio = await Studio.findByIdAndUpdate(
+      request.params.id,
+      { $set: { moderationStatus: request.body.status, moderationNote: request.body.note?.trim() ?? "" } },
+      { new: true, runValidators: true },
+    ).lean();
+    if (!studio) {
+      response.status(404).json({ status: "error", message: "This studio could not be found." });
+      return;
+    }
+    notifyInBackground({
+      to: studio.ownerEmail,
+      subject: status === "approved" ? `Studio approved: ${studio.title}` : `Studio review update: ${studio.title}`,
+      text: status === "approved"
+        ? `Your studio listing “${studio.title}” has been approved and is now eligible to appear publicly. You can manage its availability in your dashboard.`
+        : `Your studio listing “${studio.title}” was not approved yet. ${request.body.note?.trim() ? `Admin note: ${request.body.note.trim()}` : "Open your dashboard to review the listing and make any needed changes."}`,
+    });
+    response.json({ studio: { id: String(studio._id), moderationStatus: studio.moderationStatus, isAvailable: studio.isAvailable } });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.patch("/admin/host-verifications/:id", async (request, response, next) => {
+  try {
+    if (!mongoose.isValidObjectId(request.params.id)
+      || !["approved", "rejected"].includes(request.body?.status)
+      || (request.body?.adminNote !== undefined && (typeof request.body.adminNote !== "string" || request.body.adminNote.length > 500))) {
+      response.status(400).json({ status: "error", message: "Choose an approval state and a note under 500 characters." });
+      return;
+    }
+    const database = await connectDatabase();
+    if (!database) {
+      response.status(503).json({ status: "error", message: "Host verification is temporarily unavailable." });
+      return;
+    }
+    const session = response.locals.authSession as { user: { email: string } };
+    const verification = await HostVerification.findByIdAndUpdate(
+      request.params.id,
+      { $set: {
+        status: request.body.status,
+        adminNote: request.body.adminNote?.trim() ?? "",
+        reviewedBy: session.user.email,
+        reviewedAt: new Date(),
+      } },
+      { new: true, runValidators: true },
+    ).lean();
+    if (!verification) {
+      response.status(404).json({ status: "error", message: "This verification request could not be found." });
+      return;
+    }
+    notifyInBackground({
+      to: verification.email,
+      subject: request.body.status === "approved" ? "StudioSpace host verification approved" : "StudioSpace host verification update",
+      text: request.body.status === "approved"
+        ? "Your StudioSpace host verification has been approved. Your public studio pages can now show the verified host badge."
+        : `Your StudioSpace host verification was not approved. ${request.body.adminNote?.trim() ? `Admin note: ${request.body.adminNote.trim()}` : "You can update your request from your dashboard."}`,
+    });
+    response.json({ verification: { id: String(verification._id), status: verification.status, adminNote: verification.adminNote } });
   } catch (error) {
     next(error);
   }
@@ -196,6 +296,13 @@ adminRouter.patch("/admin/bookings/:id/status", async (request, response, next) 
         response.status(404).json({ status: "error", message: "This booking could not be found." });
         return;
       }
+      if (booking.customerEmail && status !== "Pending") {
+        notifyInBackground({
+          to: booking.customerEmail,
+          subject: `Booking update: ${booking.studioTitle}`,
+          text: `An administrator updated your ${booking.studioTitle} booking for ${booking.bookingDate} to ${status}. Open My Bookings to see its current status.`,
+        });
+      }
       response.json({ booking: { id: String(booking._id), status: booking.status } });
       return;
     }
@@ -237,6 +344,14 @@ adminRouter.patch("/admin/bookings/:id/status", async (request, response, next) 
         return;
       }
       if (result?.kind === "confirmed") {
+        const booking = await Booking.findById(result.bookingId).select("customerEmail studioTitle bookingDate startTime endTime").lean();
+        if (booking?.customerEmail) {
+          notifyInBackground({
+            to: booking.customerEmail,
+            subject: `Booking confirmed: ${booking.studioTitle}`,
+            text: `Your booking for ${booking.studioTitle} on ${booking.bookingDate}, ${booking.startTime}–${booking.endTime} is confirmed. You can pay for the rental from My Bookings.`,
+          });
+        }
         response.json({ booking: { id: result.bookingId, status: "Confirmed" } });
         return;
       }

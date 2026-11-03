@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Aperture, ArrowRight, MapPin, Star } from "lucide-react";
+import { Aperture, ArrowRight, ExternalLink, MapPin, Star } from "lucide-react";
 import type { FeaturedStudio } from "@/lib/studio-types";
 import { studioCategoryLabels, studioCategoryToneClasses } from "@/lib/studio-types";
 import { FavoriteButton } from "@/components/studios/favorite-button";
@@ -28,6 +28,9 @@ export function StudioCard({ studio }: { studio: FeaturedStudio }) {
         <p className="mt-2 flex items-center gap-1.5 text-sm text-muted"><MapPin size={15} aria-hidden="true" /><span className="line-clamp-1">{studio.location}</span></p>
         <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand-strong">View details <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
       </Link>
+      <div className="px-5 pb-5 sm:px-6 sm:pb-6">
+        <a href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(`${studio.title} ${studio.location}`)}`} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-1.5 text-xs font-semibold text-muted hover:text-brand-strong"><MapPin size={14} aria-hidden="true" />Open map <ExternalLink size={12} aria-hidden="true" /></a>
+      </div>
     </article>
   );
 }

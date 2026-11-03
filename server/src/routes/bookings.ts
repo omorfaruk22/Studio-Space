@@ -5,7 +5,9 @@ import { requireAuth } from "../middleware/requireAuth.js";
 import { confirmedBookingOverlapRange } from "../lib/booking-overlap.js";
 import { createBookingInvoicePdf } from "../lib/booking-invoice-pdf.js";
 import { Booking } from "../models/Booking.js";
+import { Review } from "../models/Review.js";
 import { Studio } from "../models/Studio.js";
+import { notifyInBackground } from "../lib/email.js";
 
 export const bookingsRouter = Router();
 
@@ -29,7 +31,11 @@ function serializeBooking(booking: {
   hourlyRate: number;
   totalPrice: number;
   securityDeposit: number;
+  customerName?: string | null;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
   status: string;
+  paymentStatus?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }) {
@@ -49,7 +55,11 @@ function serializeBooking(booking: {
     hourlyRate: booking.hourlyRate,
     totalPrice: booking.totalPrice,
     securityDeposit: booking.securityDeposit,
+    customerName: booking.customerName ?? "",
+    customerEmail: booking.customerEmail ?? "",
+    customerPhone: booking.customerPhone ?? "",
     status: booking.status,
+    paymentStatus: booking.paymentStatus ?? "unpaid",
     createdAt: booking.createdAt?.toISOString(),
     updatedAt: booking.updatedAt?.toISOString(),
   };
@@ -86,6 +96,7 @@ bookingsRouter.post("/bookings", async (request, response, next) => {
     }
 
     const { studioId, bookingDate, startTime, endTime, numberOfPeople, timeZoneOffsetMinutes } = request.body ?? {};
+    const customerPhone = typeof request.body?.customerPhone === "string" ? request.body.customerPhone.trim() : "";
     if (typeof studioId !== "string" || !idPattern.test(studioId)) {
       response.status(400).json({ status: "error", message: "Choose a valid studio." });
       return;
@@ -109,6 +120,10 @@ bookingsRouter.post("/bookings", async (request, response, next) => {
       response.status(400).json({ status: "error", message: "The booking time zone is invalid." });
       return;
     }
+    if (!/^\+?[\d ()-]{7,30}$/.test(customerPhone)) {
+      response.status(400).json({ status: "error", message: "Add a valid contact phone number for booking updates." });
+      return;
+    }
     const [year, month, day] = bookingDate.split("-").map(Number);
     const [hour, minute] = startTime.split(":").map(Number);
     const startAtUtc = Date.UTC(year, month - 1, day, hour, minute) + timeZoneOffsetMinutes * 60_000;
@@ -122,9 +137,9 @@ bookingsRouter.post("/bookings", async (request, response, next) => {
     }
 
     const studio = await Studio.findOne({ _id: studioId, isAvailable: true })
-      .select("title image location hourlyRate securityDeposit maxCapacity")
+      .select("title image location hourlyRate securityDeposit maxCapacity ownerEmail ownerName moderationStatus")
       .lean();
-    if (!studio) {
+    if (!studio || (studio.moderationStatus && studio.moderationStatus !== "approved")) {
       response.status(404).json({ status: "error", message: "This studio is not available for booking." });
       return;
     }
@@ -147,7 +162,7 @@ bookingsRouter.post("/bookings", async (request, response, next) => {
       return;
     }
 
-    const session = response.locals.authSession as { user: { id: string } };
+    const session = response.locals.authSession as { user: { id: string; name: string; email: string } };
     const durationMinutes = timeInMinutes(endTime) - timeInMinutes(startTime);
     const totalPrice = Math.round((studio.hourlyRate * durationMinutes / 60) * 100) / 100;
     const booking = await Booking.create({
@@ -156,6 +171,9 @@ bookingsRouter.post("/bookings", async (request, response, next) => {
       studioTitle: studio.title,
       studioImage: studio.image,
       studioLocation: studio.location,
+      customerName: session.user.name,
+      customerEmail: session.user.email,
+      customerPhone,
       bookingDate,
       startTime,
       endTime,
@@ -164,7 +182,19 @@ bookingsRouter.post("/bookings", async (request, response, next) => {
       hourlyRate: studio.hourlyRate,
       totalPrice,
       securityDeposit: studio.securityDeposit,
+      timeZoneOffsetMinutes,
       status: "Pending",
+    });
+
+    notifyInBackground({
+      to: studio.ownerEmail,
+      subject: `New booking request: ${studio.title}`,
+      text: `${session.user.name} requested ${studio.title} on ${bookingDate}, ${startTime}–${endTime}. Contact: ${session.user.email} · ${customerPhone}. Review the request in your StudioSpace dashboard.`,
+    });
+    notifyInBackground({
+      to: session.user.email,
+      subject: `Booking request sent: ${studio.title}`,
+      text: `Your request for ${studio.title} on ${bookingDate}, ${startTime}–${endTime} has been sent to the host. The booking is not confirmed until the host accepts it.`,
     });
 
     response.status(201).json({ booking: serializeBooking(booking) });
@@ -183,7 +213,8 @@ bookingsRouter.get("/my-bookings", async (_request, response, next) => {
 
     const session = response.locals.authSession as { user: { id: string } };
     const bookings = await Booking.find({ userId: session.user.id }).sort({ createdAt: -1 }).lean();
-    response.json({ bookings: bookings.map(serializeBooking) });
+    const reviewedIds = new Set((await Review.find({ bookingId: { $in: bookings.map((booking) => booking._id) } }).select("bookingId").lean()).map((review) => String(review.bookingId)));
+    response.json({ bookings: bookings.map((booking) => ({ ...serializeBooking(booking), reviewSubmitted: reviewedIds.has(String(booking._id)) })) });
   } catch (error) {
     next(error);
   }
@@ -270,6 +301,14 @@ bookingsRouter.patch("/host/bookings/:id/confirm", async (request, response, nex
         return;
       }
       if (result?.kind === "confirmed") {
+        const confirmed = await Booking.findById(request.params.id).select("customerEmail studioTitle bookingDate startTime endTime").lean();
+        if (confirmed?.customerEmail) {
+          notifyInBackground({
+            to: confirmed.customerEmail,
+            subject: `Booking confirmed: ${confirmed.studioTitle}`,
+            text: `Your booking for ${confirmed.studioTitle} on ${confirmed.bookingDate}, ${confirmed.startTime}–${confirmed.endTime} is confirmed. You can pay for the rental from My Bookings.`,
+          });
+        }
         response.json({ booking: result.booking });
         return;
       }
@@ -324,6 +363,13 @@ bookingsRouter.patch("/host/bookings/:id/decline", async (request, response, nex
       return;
     }
     response.json({ booking: serializeBooking(declinedBooking) });
+    if (declinedBooking.customerEmail) {
+      notifyInBackground({
+        to: declinedBooking.customerEmail,
+        subject: `Booking update: ${declinedBooking.studioTitle}`,
+        text: `The host could not accept your request for ${declinedBooking.studioTitle} on ${declinedBooking.bookingDate}. Browse other available studios for another time.`,
+      });
+    }
   } catch (error) {
     next(error);
   }
@@ -434,6 +480,14 @@ bookingsRouter.patch("/bookings/:id/cancel", async (request, response, next) => 
       return;
     }
     response.json({ booking: serializeBooking(booking) });
+    const studio = await Studio.findById(booking.studioId).select("ownerEmail").lean();
+    if (studio?.ownerEmail) {
+      notifyInBackground({
+        to: studio.ownerEmail,
+        subject: `Booking cancelled: ${booking.studioTitle}`,
+        text: `The customer cancelled the pending request for ${booking.studioTitle} on ${booking.bookingDate}, ${booking.startTime}–${booking.endTime}.`,
+      });
+    }
   } catch (error) {
     next(error);
   }
