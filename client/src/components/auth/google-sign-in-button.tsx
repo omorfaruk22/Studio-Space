@@ -8,14 +8,23 @@ import { Button } from "@/components/ui/button";
 
 export function GoogleSignInButton() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
+  const [configState, setConfigState] = useState<"checking" | "enabled" | "disabled" | "unavailable">("checking");
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-    fetch(`${apiUrl}/api/auth/config`)
+    let cancelled = false;
+
+    fetch("/api/auth/config", { cache: "no-store" })
       .then((response) => response.ok ? response.json() as Promise<{ googleEnabled: boolean }> : Promise.reject())
-      .then((config) => setIsConfigured(config.googleEnabled))
-      .catch(() => setIsConfigured(false));
+      .then((config) => {
+        if (!cancelled) setConfigState(config.googleEnabled ? "enabled" : "disabled");
+      })
+      .catch(() => {
+        if (!cancelled) setConfigState("unavailable");
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function signInWithGoogle() {
@@ -35,10 +44,11 @@ export function GoogleSignInButton() {
 
   return (
     <div>
-      <Button type="button" variant="outline" className="w-full" disabled={isLoading || isConfigured !== true} onClick={signInWithGoogle}>
-        <GoogleMark /> {isLoading ? "Connecting to Google…" : isConfigured === false ? "Google sign-in setup required" : "Continue with Google"}
+      <Button type="button" variant="outline" className="w-full" disabled={isLoading || configState !== "enabled"} onClick={signInWithGoogle}>
+        <GoogleMark /> {isLoading ? "Connecting to Google…" : configState === "checking" ? "Checking Google sign-in…" : configState === "disabled" ? "Google sign-in setup required" : configState === "unavailable" ? "Google sign-in unavailable" : "Continue with Google"}
       </Button>
-      {isConfigured === false ? <p className="mt-2 text-center text-xs leading-5 text-muted">Add Google OAuth credentials in the server&apos;s <code>.env.local</code> file to enable this option.</p> : null}
+      {configState === "disabled" ? <p className="mt-2 text-center text-xs leading-5 text-muted">Google OAuth credentials are not configured on the authentication server.</p> : null}
+      {configState === "unavailable" ? <p className="mt-2 text-center text-xs leading-5 text-muted">Could not reach the authentication service. Refresh the page and try again.</p> : null}
     </div>
   );
 }
