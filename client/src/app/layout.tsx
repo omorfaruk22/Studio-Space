@@ -17,7 +17,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <head>
         <Script id="studio-space-theme" strategy="beforeInteractive">
-          {`try { document.documentElement.dataset.theme = localStorage.getItem("studiospace-theme") === "dark" ? "dark" : "light"; } catch { document.documentElement.dataset.theme = "light"; }`}
+          {`try { document.documentElement.dataset.theme = localStorage.getItem("studiospace-theme") === "light" ? "light" : "dark"; } catch { document.documentElement.dataset.theme = "dark"; }`}
         </Script>
       </head>
       <body className="min-h-full flex flex-col font-sans">

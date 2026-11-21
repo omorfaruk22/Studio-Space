@@ -101,7 +101,7 @@ export default function Home() {
             <Link href="/register" className="mt-9 inline-flex min-h-12 items-center gap-2 rounded-full bg-brand px-6 text-sm font-semibold text-white transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Join the community <ArrowRight size={16} aria-hidden="true" /></Link>
           </div>
           <div className="relative hidden min-h-[460px] overflow-hidden lg:block">
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,#204d38_0%,transparent_35%),linear-gradient(0deg,rgba(23,61,44,.25),rgba(23,61,44,.05)),url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=85')] bg-cover bg-center" role="img" aria-label="A bright, welcoming creative studio workspace" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,#10351e_0%,transparent_38%),linear-gradient(0deg,rgba(5,20,10,.34),rgba(10,43,22,.08)),url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=85')] bg-cover bg-center" role="img" aria-label="A bright, welcoming creative studio workspace" />
             <div className="absolute bottom-9 left-8 right-8 rounded-2xl border border-white/15 bg-forest/65 p-5 text-white backdrop-blur-md xl:left-12 xl:right-12">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#cfe5d2]"><UsersRound size={15} aria-hidden="true" /> Made for good collaboration</div>
               <p className="mt-2 font-serif text-2xl">Space to make it yours.</p>

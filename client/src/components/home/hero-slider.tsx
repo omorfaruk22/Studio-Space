@@ -79,7 +79,7 @@ export function HeroSlider() {
               className="object-cover"
               style={{ objectPosition: slide.position }}
             />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(12,35,37,.92)_0%,rgba(12,35,37,.77)_42%,rgba(12,35,37,.18)_100%),linear-gradient(0deg,rgba(12,35,37,.42),transparent_45%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,16,8,.94)_0%,rgba(5,22,11,.78)_42%,rgba(5,18,9,.2)_100%),linear-gradient(0deg,rgba(3,12,6,.48),transparent_45%)]" />
           </div>
         ))}
 
