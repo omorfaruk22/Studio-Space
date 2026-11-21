@@ -27,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </Suspense>
           {children}
           <SiteFooter />
-          <Toaster position="top-right" richColors />
+          <Toaster position="bottom-right" richColors />
         </SavedStudiosProvider>
       </body>
     </html>

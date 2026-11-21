@@ -15,7 +15,7 @@ export function SessionAwareHeader() {
       toast.error("We could not sign you out. Please try again.");
       return;
     }
-    toast.success("You have been logged out.");
+    toast.success("You have been logged out.", { duration: 1000 });
     router.push("/");
     router.refresh();
   }

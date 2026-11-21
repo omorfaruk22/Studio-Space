@@ -82,6 +82,6 @@ Record the date, deployment commit, smoke check result, manual checklist result,
 
 ## Implementation update — 2026-11-03
 
-- Added studio moderation and host verification requests, booking availability, completed-booking reviews, OpenStreetMap search links, SSLCommerz hosted checkout, and optional SMTP notifications. The moderation dashboard, host verification flow, and gallery uploads have since been removed; listings now go live according to each host's availability setting and use a single image URL.
+- Current marketplace behavior includes host-controlled listing visibility, one image URL per studio, booking availability, completed-booking reviews, OpenStreetMap search links, SSLCommerz hosted checkout, and optional SMTP notifications.
 - Local checks for this update: server TypeScript typecheck/build and client lint/build passed.
 - A live SSLCommerz sandbox transaction and actual email delivery still require merchant and SMTP credentials in Render, plus the registered SSLCommerz IPN URL. Those provider checks are not claimed as completed.
