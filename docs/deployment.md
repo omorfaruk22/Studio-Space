@@ -6,7 +6,7 @@ StudioSpace uses Vercel for the Next.js client, Render for the Express API, and 
 
 1. In Render, choose **New → Blueprint** and connect this GitHub repository on `main`.
 2. Render reads the root `render.yaml`. Confirm that the service root is `server`, with build command `npm ci && npm run build`, start command `npm start`, and health check `/api/health`.
-3. Supply the prompted environment variables. Set `MONGODB_URI` to the Atlas connection string. Use your Vercel production origin for `CLIENT_ORIGIN` and `BETTER_AUTH_URL` once you have it; both values are origins such as `https://your-project.vercel.app`, without a trailing slash. If you deploy Render first and don't have the Vercel URL yet, temporarily use `http://localhost:3000` for both, then replace both with the Vercel production origin and redeploy. Enter the Google OAuth Web Client ID and secret in Render's environment settings. Add `IMGBB_API_KEY` there to enable authenticated studio image uploads.
+3. Supply the prompted environment variables. Set `MONGODB_URI` to the Atlas connection string. Use your Vercel production origin for `CLIENT_ORIGIN` and `BETTER_AUTH_URL` once you have it; both values are origins such as `https://your-project.vercel.app`, without a trailing slash. If you deploy Render first and don't have the Vercel URL yet, temporarily use `http://localhost:3000` for both, then replace both with the Vercel production origin and redeploy. Enter the Google OAuth Web Client ID and secret in Render's environment settings.
 4. Create the service and copy its `onrender.com` URL. In the Render service's **Connect → Outbound** panel, copy the outbound CIDR ranges for its region. Add those ranges to the MongoDB Atlas project's **Network Access → IP Access List**, then redeploy or restart the Render service and confirm `GET /api/health` reports `database: "connected"`.
 
 Do not use `0.0.0.0/0` for Atlas access. Render's outbound ranges can be shared and can change; use the ranges shown for the service, or a dedicated outbound IP if your Render plan supports it. See the [Render outbound IP guide](https://render.com/docs/outbound-ip-addresses) and [Atlas IP access list guide](https://www.mongodb.com/docs/atlas/security/ip-access-list/).
@@ -27,17 +27,13 @@ In Render, set both `CLIENT_ORIGIN` and `BETTER_AUTH_URL` to the exact Vercel pr
 - Authorized JavaScript origin: `https://your-project.vercel.app`
 - Authorized redirect URI: `https://your-project.vercel.app/api/auth/callback/google`
 
-Use the actual Vercel origin in both entries. Keep `MONGODB_URI`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, and `IMGBB_API_KEY` in provider environment settings only; never commit them. Render generates `BETTER_AUTH_SECRET` from the Blueprint.
-
-## Admin access
-
-To grant platform-admin access, add `ADMIN_EMAILS` to the Render API service environment. Set its value to one or more account email addresses separated by commas, then save and redeploy. The email must match the signed-in StudioSpace account. Admins can open `/admin` to review platform totals, approve or reject studio listings, review host verification requests, edit listings, and manage bookings. All admin API endpoints enforce the same server-side allowlist.
+Use the actual Vercel origin in both entries. Keep `MONGODB_URI`, `BETTER_AUTH_SECRET`, and `GOOGLE_CLIENT_SECRET` in provider environment settings only; never commit them. Render generates `BETTER_AUTH_SECRET` from the Blueprint.
 
 ## Optional payments and email
 
 The SSLCommerz checkout integration starts in sandbox mode. In Render, set `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD`, `SSLCOMMERZ_SANDBOX=true`, and `PUBLIC_API_URL` to the API's public origin. Register `<PUBLIC_API_URL>/api/payments/sslcommerz/ipn` in the merchant IPN settings. Run a sandbox payment and confirm the API validates it before adding production merchant credentials and switching `SSLCOMMERZ_SANDBOX=false`. The application currently prices bookings in USD; confirm the merchant's currency support and conversion display before enabling live checkout.
 
-For booking and moderation notifications, optionally set `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `EMAIL_FROM` in Render. Without these values, email notifications remain disabled; booking and payment records still work.
+For booking and payment notifications, optionally set `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `EMAIL_FROM` in Render. Without these values, email notifications remain disabled; booking and payment records still work.
 
 ## 4. Verify the deployment
 

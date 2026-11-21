@@ -1,22 +1,20 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import { Aperture, ArrowLeft, ArrowRight, BadgeCheck, Check, ExternalLink, MapPin, Star, UsersRound } from "lucide-react";
+import { Aperture, ArrowLeft, ArrowRight, Check, ExternalLink, MapPin, Star, UsersRound } from "lucide-react";
 import { BookingDialogButton } from "@/components/bookings/booking-dialog-button";
 import { GuestReviews } from "@/components/studios/guest-reviews";
-import { StudioGallery } from "@/components/studios/studio-gallery";
 import { SectionHeading } from "@/components/ui/section-heading";
 import type { FeaturedStudio } from "@/lib/studio-types";
 import { studioCategoryLabels, studioCategoryToneClasses } from "@/lib/studio-types";
 import { getCurrentSession } from "@/lib/server-session";
 
 type StudioDetails = FeaturedStudio & {
-  images: string[];
   securityDeposit: number;
   maxCapacity: number;
   amenities: string[];
   overview: string;
   host: { name: string };
-  hostVerified: boolean;
 };
 
 const apiUrl = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
@@ -26,13 +24,14 @@ function MessagePage({ title, description, href, linkLabel }: { title: string; d
 }
 
 function StudioContent({ studio, isAuthenticated }: { studio: StudioDetails; isAuthenticated: boolean }) {
-  const gallery = [studio.image, ...studio.images];
   const category = studioCategoryLabels[studio.category] ?? "Creative space";
 
   return (
     <main className="mx-auto w-full max-w-page flex-1 px-5 py-8 sm:px-8 sm:py-10 xl:px-12">
       <Link href="/studios" className="mb-6 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-muted transition hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"><ArrowLeft size={16} aria-hidden="true" />Back to all studios</Link>
-      <StudioGallery title={studio.title} images={gallery} />
+      <div className="relative aspect-[1.8] overflow-hidden rounded-[2rem] bg-sage">
+        <Image src={studio.image} alt={studio.title} fill priority sizes="(max-width: 1024px) 100vw, 68vw" unoptimized className="object-cover" />
+      </div>
 
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_340px] xl:gap-12">
         <div>
@@ -57,7 +56,7 @@ function StudioContent({ studio, isAuthenticated }: { studio: StudioDetails; isA
             <SectionHeading title="Meet your host" />
             <div className="mt-5 flex items-center gap-4 rounded-3xl border border-line bg-white p-5">
               <span className="grid size-14 shrink-0 place-items-center rounded-full bg-forest font-serif text-xl text-white">{studio.host.name.trim().charAt(0).toUpperCase()}</span>
-              <div><p className="flex flex-wrap items-center gap-1.5 font-semibold text-ink">{studio.host.name}{studio.hostVerified ? <span className="inline-flex items-center gap-1 rounded-full bg-accent-green-soft px-2 py-0.5 text-[11px] font-bold text-accent-green-strong"><BadgeCheck size={13} aria-hidden="true" />Verified host</span> : null}</p><p className="mt-1 text-sm text-muted">StudioSpace host</p></div>
+              <div><p className="font-semibold text-ink">{studio.host.name}</p><p className="mt-1 text-sm text-muted">StudioSpace host</p></div>
               <Aperture className="ml-auto text-brand-strong" size={22} aria-hidden="true" />
             </div>
           </section>

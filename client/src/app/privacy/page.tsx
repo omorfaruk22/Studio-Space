@@ -17,7 +17,7 @@ const sections = [
   },
   {
     title: "Saved spaces, images, and updates list",
-    body: "Saved studios are associated with your account. If image uploads are enabled, uploaded studio images are hosted by ImgBB. Host verification requests store the business details, website, and explanation the host submits for manual review; the form does not request identity-document uploads. The footer updates form stores the email address you submit in MongoDB; newsletter campaigns are not connected. Booking and moderation emails are sent through SMTP only after the service owner configures an email provider.",
+    body: "Saved studios are associated with your account. Hosts provide one public image URL per listing; StudioSpace does not upload or host image files. The footer updates form stores the email address you submit in MongoDB; newsletter campaigns are not connected. Booking email notifications use SMTP only after the service owner configures an email provider.",
   },
   {
     title: "Browser storage and your choices",

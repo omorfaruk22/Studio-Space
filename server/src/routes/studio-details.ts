@@ -3,7 +3,6 @@ import { connectDatabase } from "../config/database.js";
 import { publicStudioFilter } from "../lib/studio-visibility.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { Booking } from "../models/Booking.js";
-import { HostVerification } from "../models/HostVerification.js";
 import { Review } from "../models/Review.js";
 import { Studio } from "../models/Studio.js";
 
@@ -24,15 +23,13 @@ studioDetailsRouter.get("/studios/:id", async (request, response, next) => {
     }
 
     const studio = await Studio.findOne({ _id: id, ...publicStudioFilter })
-      .select("title category hourlyRate securityDeposit maxCapacity location image images amenities overview ownerId ownerName rating createdAt")
+      .select("title category hourlyRate securityDeposit maxCapacity location image amenities overview ownerName rating createdAt")
       .lean();
 
     if (!studio) {
       response.status(404).json({ status: "error", message: "This studio could not be found." });
       return;
     }
-
-    const verifiedHost = Boolean(await HostVerification.exists({ userId: studio.ownerId, status: "approved" }));
 
     response.json({
       studio: {
@@ -44,13 +41,11 @@ studioDetailsRouter.get("/studios/:id", async (request, response, next) => {
         image: studio.image,
         rating: studio.rating,
         createdAt: studio.createdAt?.toISOString(),
-        images: studio.images ?? [],
         securityDeposit: studio.securityDeposit,
         maxCapacity: studio.maxCapacity,
         amenities: studio.amenities ?? [],
         overview: studio.overview,
         host: { name: studio.ownerName },
-        hostVerified: verifiedHost,
       },
     });
   } catch (error) {

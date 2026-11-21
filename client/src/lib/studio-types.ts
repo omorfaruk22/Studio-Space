@@ -16,14 +16,11 @@ export type FeaturedStudio = {
 export type HostStudio = FeaturedStudio & {
   securityDeposit: number;
   maxCapacity: number;
-  images: string[];
   amenities: string[];
   overview: string;
   isAvailable: boolean;
   ownerName: string;
   ownerEmail: string;
-  moderationStatus: "pending" | "approved" | "rejected";
-  moderationNote?: string;
   updatedAt?: string;
 };
 

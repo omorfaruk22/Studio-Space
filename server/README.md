@@ -33,13 +33,7 @@ All host studio routes require a signed-in session and scope records to the auth
 - `DELETE /api/host/studios/:id` permanently deletes an owned listing.
 - `PATCH /api/host/studios/:id/availability` accepts `{ "isAvailable": true }` to publish a hidden listing again.
 
-Studio cover and gallery uploads use ImgBB. Set `IMGBB_API_KEY` in the server environment; uploads are proxied through the authenticated API and limited to JPEG, PNG, and WebP images up to 8 MB each.
-
-## Admin dashboard
-
-Set `ADMIN_EMAILS` in the server environment to a comma-separated allowlist of StudioSpace account email addresses. Only authenticated accounts on this allowlist can use admin actions. The client dashboard is available at `/admin`, the profile menu links to it only after a server-side admin access check, and its studio and booking lists support search and filters. Admins can edit studio listing fields, approve or reject new listings, verify host profiles, change visibility, and manage booking statuses. Booking confirmation checks for overlapping confirmed bookings.
-
-New and host-edited listings remain private until an admin approves them. Older listings without a moderation status remain public for backward compatibility. Host verification is a manual review of public business details; the app intentionally has no identity-document upload.
+Every studio listing has one public image URL. The API stores that URL and does not upload or host image files.
 
 ## Payments and email
 

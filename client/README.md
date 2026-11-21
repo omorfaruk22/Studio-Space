@@ -7,7 +7,7 @@ The StudioSpace web application built with Next.js App Router, TypeScript, and T
 - **Website:** StudioSpace — [https://studio-space-phi.vercel.app](https://studio-space-phi.vercel.app).
 - **Client stack:** Next.js App Router, React, TypeScript, Tailwind CSS, and Sonner notifications.
 - **API and data:** Express, Better Auth, MongoDB Atlas, and Mongoose at [https://studio-space.onrender.com](https://studio-space.onrender.com).
-- **Main features:** Google/email authentication, moderated studio listings, studio discovery and host CRUD, image uploads, bookings, completed-booking reviews, host verification, SSLCommerz hosted checkout, saved studios, confirmed-booking PDF summaries, newsletter interest sign-up, and light/dark themes.
+- **Main features:** Google/email authentication, studio discovery and host CRUD, one image URL per listing, bookings, completed-booking reviews, SSLCommerz hosted checkout, saved studios, confirmed-booking PDF summaries, newsletter interest sign-up, and light/dark themes.
 - **Local setup:** copy `.env.example` to `.env.local`, set `NEXT_PUBLIC_API_URL`, run `npm ci`, then `npm run dev` from this folder.
 - **Examiner test credentials:** no shared production account or password is published in the repository. Create an account at `/register`; use a separate host account and a disposable listing to review host and booking flows. A dedicated shared account should be supplied privately by the project owner if required.
 
@@ -25,7 +25,7 @@ The production frontend is deployed at [https://studio-space-phi.vercel.app](htt
 
 Email/password authentication is configured in the server. To enable Google login, configure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `server/.env.local` and set `BETTER_AUTH_URL` to the frontend origin. The Google redirect URI is `${BETTER_AUTH_URL}/api/auth/callback/google`.
 
-Hosts can upload JPEG, PNG, or WebP cover and gallery images up to 8 MB each. Configure `IMGBB_API_KEY` in the server environment to enable uploads; image hosting credentials stay on the server.
+Each studio listing uses a single publicly accessible image URL. The app does not upload or store image files.
 
 ## Scripts
 
@@ -36,10 +36,10 @@ Hosts can upload JPEG, PNG, or WebP cover and gallery images up to 8 MB each. Co
 
 ## Studio discovery
 
-The home page includes a three-slide hero, featured studios loaded from the API, category links, booking guidance, and host support information. The `/studios` page supports title search, category, location, hourly price range, and sorting filters. Each studio links to `/studios/[id]` for its gallery, overview, amenities, host details, review summary, and booking request form.
+The home page includes a three-slide hero, featured studios loaded from the API, category links, booking guidance, and host support information. The `/studios` page supports title search, category, location, hourly price range, and sorting filters. Each studio links to `/studios/[id]` for its image, overview, amenities, host details, review summary, and booking request form.
 
 Public studio data is fetched from the Express API at `NEXT_PUBLIC_API_URL`. When there are no studio records, the home page and discovery page show friendly empty states.
 
 Signed-in creators can save studios, request a booking from its details page, and review or cancel pending requests at `/my-bookings`. Confirmed bookings can be downloaded as a PDF summary or paid through SSLCommerz after merchant credentials are configured. Reviews can only be submitted for completed bookings. Prices are calculated by the server from the current studio rate.
 
-The footer interest form stores submitted addresses in MongoDB, but there is no mailing-list provider connected. Booking and moderation email notifications use SMTP and stay disabled until the API environment has SMTP credentials. Host verification is a manual review of business information; it does not collect identity documents. Studio map links search OpenStreetMap using the entered location text. Read the [Terms](src/app/terms/page.tsx) and [Privacy notes](src/app/privacy/page.tsx) for current behavior.
+The footer interest form stores submitted addresses in MongoDB, but there is no mailing-list provider connected. Booking email notifications use SMTP and stay disabled until the API environment has SMTP credentials. Studio map links search OpenStreetMap using the entered location text. Read the [Terms](src/app/terms/page.tsx) and [Privacy notes](src/app/privacy/page.tsx) for current behavior.

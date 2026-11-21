@@ -6,7 +6,6 @@ import { Studio } from "../models/Studio.js";
 export const hostStudiosRouter = Router();
 
 const categories = ["photo", "sound-stage", "podcast", "music", "art"] as const;
-const maxImages = 10;
 const maxAmenities = 20;
 
 export type StudioInput = {
@@ -17,7 +16,6 @@ export type StudioInput = {
   maxCapacity: number;
   location: string;
   image: string;
-  images: string[];
   amenities: string[];
   overview: string;
 };
@@ -71,13 +69,6 @@ export function parseStudioInput(value: unknown): { input?: StudioInput; message
   if (!image) return { message: "Enter a valid studio image URL." };
   if (!overview) return { message: "Add a studio description (up to 5,000 characters)." };
 
-  const imagesValue = body.images ?? [];
-  if (!Array.isArray(imagesValue) || imagesValue.length > maxImages) {
-    return { message: `Add no more than ${maxImages} gallery image URLs.` };
-  }
-  const images = imagesValue.map(imageUrl);
-  if (images.some((url) => url === null)) return { message: "One of the gallery image URLs is invalid." };
-
   const amenitiesValue = body.amenities ?? [];
   if (!Array.isArray(amenitiesValue) || amenitiesValue.length > maxAmenities) {
     return { message: `Add no more than ${maxAmenities} amenities.` };
@@ -94,7 +85,6 @@ export function parseStudioInput(value: unknown): { input?: StudioInput; message
       maxCapacity,
       location,
       image,
-      images: images as string[],
       amenities: [...new Set(amenities as string[])],
       overview,
     },
@@ -110,12 +100,9 @@ export function serializeStudio(studio: {
   maxCapacity: number;
   location: string;
   image: string;
-  images: string[];
   amenities: string[];
   overview: string;
   isAvailable: boolean;
-  moderationStatus?: string;
-  moderationNote?: string;
   ownerName: string;
   ownerEmail: string;
   createdAt?: Date;
@@ -130,12 +117,9 @@ export function serializeStudio(studio: {
     maxCapacity: studio.maxCapacity,
     location: studio.location,
     image: studio.image,
-    images: studio.images ?? [],
     amenities: studio.amenities ?? [],
     overview: studio.overview,
     isAvailable: studio.isAvailable,
-    moderationStatus: studio.moderationStatus ?? "approved",
-    moderationNote: studio.moderationNote ?? "",
     ownerName: studio.ownerName,
     ownerEmail: studio.ownerEmail,
     createdAt: studio.createdAt?.toISOString(),
@@ -188,7 +172,6 @@ hostStudiosRouter.post("/host/studios", async (request, response, next) => {
       ownerId: session.user.id,
       ownerName: session.user.name,
       ownerEmail: session.user.email,
-      moderationStatus: "pending",
       isAvailable: true,
     });
 
@@ -245,7 +228,7 @@ hostStudiosRouter.patch("/host/studios/:id", async (request, response, next) => 
     const session = response.locals.authSession as { user: { id: string } };
     const studio = await Studio.findOneAndUpdate(
       { _id: request.params.id, ownerId: session.user.id },
-      { $set: { ...parsed.input, moderationStatus: "pending", moderationNote: "" } },
+      { $set: parsed.input },
       { new: true, runValidators: true },
     ).lean();
 

@@ -17,7 +17,6 @@ export const env = {
   betterAuthUrl: process.env.BETTER_AUTH_URL ?? `http://localhost:${port}`,
   googleClientId: process.env.GOOGLE_CLIENT_ID,
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  imgbbApiKey: process.env.IMGBB_API_KEY,
   publicApiUrl: (process.env.PUBLIC_API_URL ?? `http://localhost:${port}`).replace(/\/$/, ""),
   sslCommerzStoreId: process.env.SSLCOMMERZ_STORE_ID,
   sslCommerzStorePassword: process.env.SSLCOMMERZ_STORE_PASSWORD,
@@ -28,8 +27,4 @@ export const env = {
   smtpUser: process.env.SMTP_USER,
   smtpPassword: process.env.SMTP_PASSWORD,
   emailFrom: process.env.EMAIL_FROM,
-  adminEmails: (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean),
 };

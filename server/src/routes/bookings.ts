@@ -137,9 +137,9 @@ bookingsRouter.post("/bookings", async (request, response, next) => {
     }
 
     const studio = await Studio.findOne({ _id: studioId, isAvailable: true })
-      .select("title image location hourlyRate securityDeposit maxCapacity ownerEmail ownerName moderationStatus")
+      .select("title image location hourlyRate securityDeposit maxCapacity ownerEmail ownerName")
       .lean();
-    if (!studio || (studio.moderationStatus && studio.moderationStatus !== "approved")) {
+    if (!studio) {
       response.status(404).json({ status: "error", message: "This studio is not available for booking." });
       return;
     }

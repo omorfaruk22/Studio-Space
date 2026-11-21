@@ -36,7 +36,7 @@ Use separate test accounts for a customer and a host. Do not add real passwords 
 
 - [ ] Browse `/studios`; search by title and location, filter by category and price, and change sorting.
 - [ ] Open a studio detail page and reload that URL directly.
-- [ ] As the host, create a listing with a cover image and gallery; confirm it appears in discovery.
+- [ ] As the host, create a listing with one public image URL; confirm it appears in discovery.
 - [ ] Edit the listing, hide it, show it again, and delete a disposable test listing.
 - [ ] With a second host account, verify the first host's listing cannot be read or changed through host controls.
 
@@ -65,7 +65,7 @@ Use separate test accounts for a customer and a host. Do not add real passwords 
 
 ## Release notes and test data
 
-The production deployment uses Vercel for the frontend, Render for the API, MongoDB Atlas for persistence, Google OAuth for optional Google login, and ImgBB for host image uploads. Create throwaway test accounts and disposable listings in the deployed app for the manual checks above; this project intentionally does not publish shared test passwords.
+The production deployment uses Vercel for the frontend, Render for the API, and MongoDB Atlas for persistence, with Google OAuth as an optional login provider. Create throwaway test accounts and disposable listings in the deployed app for the manual checks above; this project intentionally does not publish shared test passwords.
 
 Record the date, deployment commit, smoke check result, manual checklist result, and any failures in the release/commit notes when completing a release. Never record passwords, access tokens, or secret environment-variable values.
 
@@ -78,10 +78,10 @@ Record the date, deployment commit, smoke check result, manual checklist result,
 - Responsive spot-check: **390 × 844 px** on home, mobile navigation, discovery, login, registration, add-studio, dashboard, customer bookings, host booking requests, and saved studios. The layouts fit the mobile viewport; the temporary viewport override was reset.
 - Local client production build compiled and completed TypeScript checking, then failed during `/dashboard` prerender because Windows returned `EPERM` while Next.js created a generated `.next` directory. Production home and discovery routes were reachable; rerun the full build in Vercel’s build environment to clear this local-only verification gap.
 - At the time of the 2026-11-02 production check, there were zero public studios, so live listing and booking flows still needed a staging listing or owner-approved test records.
-- At that time, operational integrations still needed owner setup: mailing-list delivery and ImgBB for uploads. The site did not claim identity verification, insurance, or 24/7 support.
+- At that time, operational integrations still needed owner setup: mailing-list delivery and ImgBB uploads. The site did not claim identity verification, insurance, or 24/7 support.
 
 ## Implementation update — 2026-11-03
 
-- Added studio moderation, host verification requests, booking availability, completed-booking reviews, OpenStreetMap search links, SSLCommerz hosted checkout, and optional SMTP notifications.
+- Added studio moderation and host verification requests, booking availability, completed-booking reviews, OpenStreetMap search links, SSLCommerz hosted checkout, and optional SMTP notifications. The moderation dashboard, host verification flow, and gallery uploads have since been removed; listings now go live according to each host's availability setting and use a single image URL.
 - Local checks for this update: server TypeScript typecheck/build and client lint/build passed.
 - A live SSLCommerz sandbox transaction and actual email delivery still require merchant and SMTP credentials in Render, plus the registered SSLCommerz IPN URL. Those provider checks are not claimed as completed.

@@ -7,7 +7,7 @@ This audit compares the submitted assignment brief with the current repository a
 - The Vercel client and Render API are live; the API health endpoint reports MongoDB connected.
 - The homepage has three interactive hero slides, dynamic featured studios (limited to six), five category links, four booking steps, and a host/creator planning section that avoids claiming unprovided protection or support services.
 - Email and Google authentication, protected pages, profile menu, responsive navigation, loading/error/empty states, Sonner toasts, and custom dialogs are present. Protected API mutations validate Better Auth sessions, with a short-lived JWKS-backed JWT session-cache cookie marked HTTP-only and secure in production; anonymous requests receive 401.
-- Host studio create/read/update/delete and availability controls use MongoDB and owner-scoped authorization; image uploads use ImgBB when configured.
+- Host studio create/read/update/delete and availability controls use MongoDB and owner-scoped authorization; each listing stores one public image URL.
 - Booking requests show statuses, support pending cancellation and host confirm/decline, reject requests overlapping confirmed slots, reject overlapping host confirmations, and provide a downloadable PDF summary for confirmed bookings.
 - Signed-in users can save and remove studios from a MongoDB-backed wishlist.
 - Newsletter interest stores a normalized email once in MongoDB; duplicate sign-ups are idempotent. The UI clearly says that email updates are not sent because no mailing provider is configured.
